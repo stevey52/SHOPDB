@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import views as auth_views
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, FormView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -7,6 +8,11 @@ from django.db.models import Sum, F
 from django.utils import timezone
 from .models import Product, InventoryMovement, Sale, MoneyJournal
 from .forms import SaleForm, MovementForm, MoneyJournalForm
+
+class MyLogoutView(auth_views.LogoutView):
+    def get(self, request, *args, **kwargs):
+        """Allow GET requests for logout (to prevent 405 error on browser refresh/back)."""
+        return self.post(request, *args, **kwargs)
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'shop/dashboard.html'

@@ -20,12 +20,12 @@ urlpatterns = [
     path('admin/', admin.site.create_admin_site_if_not_exists() if hasattr(admin.site, 'create_admin_site_if_not_exists') else admin.site.urls), # standard way below
 ]
 
-# Standard way
 from django.contrib.auth import views as auth_views
+from shop import views as shop_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('shop.urls')),
     path('login/', auth_views.LoginView.as_view(template_name='shop/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('logout/', shop_views.MyLogoutView.as_view(), name='logout'),
 ]
