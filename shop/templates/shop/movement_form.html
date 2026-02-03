@@ -12,8 +12,7 @@
             <select name="product" class="glass"
                 style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border); background: var(--glass-bg);">
                 {% for product in form.product.field.queryset %}
-                <option value="{{ product.pk }}" style="color: black;">{{ product.name }} (Stock: {{
-                    product.current_stock }})</option>
+                <option value="{{ product.pk }}" style="color: black;">{{ product.name }}</option>
                 {% endfor %}
             </select>
         </div>
