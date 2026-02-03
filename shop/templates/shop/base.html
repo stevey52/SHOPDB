@@ -1,0 +1,99 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Auto RedMotors{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'shop/css/styles.css' %}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar glass">
+            <div class="logo">
+                <i data-lucide="gauge"></i>
+                <span>ARM SHOP</span>
+            </div>
+            
+            <nav class="nav-links">
+                <li class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <a href="{% url 'dashboard' %}">
+                        <i data-lucide="layout-dashboard"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item {% if request.resolver_match.url_name == 'product_list' %}active{% endif %}">
+                    <a href="{% url 'product_list' %}">
+                        <i data-lucide="package"></i> Products
+                    </a>
+                </li>
+                <li class="nav-item {% if request.resolver_match.url_name == 'inventory_history' %}active{% endif %}">
+                    <a href="{% url 'inventory_history' %}">
+                        <i data-lucide="clipboard-list"></i> Inventory
+                    </a>
+                </li>
+                <li class="nav-item {% if request.resolver_match.url_name == 'sales_history' %}active{% endif %}">
+                    <a href="{% url 'sales_history' %}">
+                        <i data-lucide="shopping-cart"></i> Sales
+                    </a>
+                </li>
+                <li class="nav-item {% if request.resolver_match.url_name == 'money_journal' %}active{% endif %}">
+                    <a href="{% url 'money_journal' %}">
+                        <i data-lucide="wallet"></i> Money Journal
+                    </a>
+                </li>
+                <li class="nav-item {% if request.resolver_match.url_name == 'low_stock' %}active{% endif %}">
+                    <a href="{% url 'low_stock' %}">
+                        <i data-lucide="alert-triangle"></i> Low Stock
+                    </a>
+                </li>
+            </nav>
+
+            <div style="margin-top: auto;">
+                {% if user.is_authenticated %}
+                <div class="nav-item">
+                     <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" style="background:none; border:none; color:inherit; cursor:pointer; font:inherit; padding:0.75rem 1rem; width:100%; text-align:left;">
+                            <i data-lucide="log-out"></i> Logout
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <h2>{% block header_title %}Dashbard{% endblock %}</h2>
+                <div class="user-info">
+                    <span>{{ user.username }}</span>
+                </div>
+            </header>
+
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="message {{ message.tags }} glass" style="padding: 1rem; margin-bottom: 1rem;">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

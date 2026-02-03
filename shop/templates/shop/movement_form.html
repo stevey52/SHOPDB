@@ -1,0 +1,46 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Stock Movement - Auto RedMotors{% endblock %}
+{% block header_title %}Record Stock Movement{% endblock %}
+
+{% block content %}
+<div class="content-section glass" style="padding: 2rem; max-width: 600px; margin: 0 auto;">
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Product</label>
+            <select name="product" class="glass"
+                style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border); background: var(--glass-bg);">
+                {% for product in form.product.field.queryset %}
+                <option value="{{ product.pk }}" style="color: black;">{{ product.name }} (Stock: {{
+                    product.current_stock }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Movement Type</label>
+            <select name="movement_type" class="glass"
+                style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border); background: var(--glass-bg);">
+                <option value="IN" style="color: black;">Stock In</option>
+                <option value="OUT" style="color: black;">Stock Out</option>
+            </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Quantity</label>
+            <input type="number" name="quantity" value="{{ form.quantity.value|default:1 }}" class="glass"
+                style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border);">
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Reference</label>
+            <input type="text" name="reference" value="{{ form.reference.value|default:'' }}" class="glass"
+                style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border);">
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Record Movement</button>
+            <a href="{% url 'inventory_history' %}" class="btn glass"
+                style="flex: 1; text-align: center; text-decoration: none; color: white;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

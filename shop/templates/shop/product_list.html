@@ -1,0 +1,56 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Products - Auto RedMotors{% endblock %}
+{% block header_title %}Products{% endblock %}
+
+{% block content %}
+<div class="content-header"
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h3 style="color: var(--text-secondary);">Manage Products</h3>
+    <a href="{% url 'product_create' %}" class="btn btn-primary">
+        <i data-lucide="plus" style="vertical-align: middle; width: 18px; margin-right: 5px;"></i> Add Product
+    </a>
+</div>
+
+<div class="content-section glass" style="padding: 1.5rem;">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Current Stock</th>
+                    <th>Unit Price</th>
+                    <th>Cost Price</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td style="font-weight: 500;">{{ product.name }}</td>
+                    <td class="{% if product.current_stock < 5 %}text-danger{% endif %}">{{ product.current_stock }}
+                    </td>
+                    <td>TZS {{ product.unit_price }}</td>
+                    <td>TZS {{ product.cost_price }}</td>
+                    <td>
+                        <a href="{% url 'product_update' product.pk %}"
+                            style="color: var(--accent-color); text-decoration: none; margin-right: 0.5rem;"
+                            title="Edit">
+                            <i data-lucide="edit-3" style="width: 18px;"></i>
+                        </a>
+                        <a href="{% url 'product_delete' product.pk %}"
+                            style="color: var(--text-danger); text-decoration: none;" title="Delete">
+                            <i data-lucide="trash-2" style="width: 18px;"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-secondary);">No products found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

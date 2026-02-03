@@ -1,0 +1,27 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Delete Product - Auto RedMotors{% endblock %}
+{% block header_title %}Delete Product{% endblock %}
+
+{% block content %}
+<div class="content-section glass" style="padding: 2rem; max-width: 600px; margin: 0 auto; text-align: center;">
+    <div style="margin-bottom: 2rem;">
+        <i data-lucide="alert-triangle"
+            style="width: 64px; height: 64px; color: var(--text-danger); margin-bottom: 1rem;"></i>
+        <h3 style="color: white; margin-bottom: 1rem;">Are you sure?</h3>
+        <p style="color: var(--text-secondary); line-height: 1.6;">
+            You are about to delete <strong>"{{ object.name }}"</strong>. This action cannot be undone and will also
+            remove all associated history and sales records.
+        </p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <button type="submit" class="btn btn-danger" style="flex: 1; min-width: 140px;">Delete Product</button>
+            <a href="{% url 'product_list' %}" class="btn glass"
+                style="flex: 1; min-width: 140px; text-align: center; text-decoration: none; color: white;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

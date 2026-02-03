@@ -1,0 +1,42 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Auto RedMotors</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'shop/css/styles.css' %}">
+</head>
+
+<body style="display: flex; align-items: center; justify-content: center; height: 100vh;">
+    <div class="login-card glass" style="padding: 3rem; width: 100%; max-width: 400px; text-align: center;">
+        <h1 style="color: var(--accent-color); margin-bottom: 2rem; font-weight: 800;">ARM SHOP</h1>
+        <h3 style="margin-bottom: 2rem; color: var(--text-secondary);">Welcome Back</h3>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group" style="margin-bottom: 1.5rem; text-align: left;">
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Username</label>
+                <input type="text" name="username" class="glass"
+                    style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border);">
+            </div>
+            <div class="form-group" style="margin-bottom: 2rem; text-align: left;">
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Password</label>
+                <input type="password" name="password" class="glass"
+                    style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border);">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem;">Login</button>
+        </form>
+
+        {% if form.errors %}
+        <p style="color: var(--danger); margin-top: 1rem;">Invalid username or password.</p>
+        {% endif %}
+    </div>
+</body>
+
+</html>

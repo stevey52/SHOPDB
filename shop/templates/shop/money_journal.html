@@ -1,0 +1,69 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Money Journal - Auto RedMotors{% endblock %}
+{% block header_title %}Money Journal{% endblock %}
+
+{% block content %}
+<div class="content-header"
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h3 style="color: var(--text-secondary);">Financial Records</h3>
+    <a href="{% url 'money_create' %}" class="btn btn-primary">
+        <i data-lucide="plus" style="vertical-align: middle; width: 18px; margin-right: 5px;"></i> Add Entry
+    </a>
+</div>
+<div class="filter-section glass"
+    style="padding: 1rem; margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: flex-end;">
+    <form method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; width: 100%;">
+        <div class="form-group" style="flex: 1; min-width: 150px;">
+            <label
+                style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">From</label>
+            <input type="date" name="start_date" value="{{ start_date }}" class="glass"
+                style="width: 100%; padding: 0.5rem; color: white; border-color: var(--glass-border);">
+        </div>
+        <div class="form-group" style="flex: 1; min-width: 150px;">
+            <label
+                style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">To</label>
+            <input type="date" name="end_date" value="{{ end_date }}" class="glass"
+                style="width: 100%; padding: 0.5rem; color: white; border-color: var(--glass-border);">
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem;">Filter</button>
+            <a href="?" class="btn glass" style="padding: 0.5rem 1rem; color: white; text-decoration: none;">Clear</a>
+        </div>
+    </form>
+</div>
+<div class="content-section glass" style="padding: 1.5rem;">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Entry Type</th>
+                    <th>Amount</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                <tr>
+                    <td>{{ entry.date|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <span class="{% if entry.entry_type == 'Income' %}text-success{% else %}text-danger{% endif %}"
+                            style="font-weight: 600;">
+                            {{ entry.entry_type }}
+                        </span>
+                    </td>
+                    <td style="font-weight: 600;">TZS {{ entry.amount }}</td>
+                    <td>{{ entry.description|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align: center; color: var(--text-secondary);">No journal entries found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

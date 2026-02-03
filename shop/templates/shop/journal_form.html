@@ -1,0 +1,36 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Add Journal Entry - Auto RedMotors{% endblock %}
+{% block header_title %}Add Journal Entry{% endblock %}
+
+{% block content %}
+<div class="content-section glass" style="padding: 2rem; max-width: 600px; margin: 0 auto;">
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Entry Type</label>
+            <select name="entry_type" class="glass"
+                style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border); background: var(--glass-bg);">
+                <option value="Expense" style="color: black;">Expense</option>
+                <option value="Income" style="color: black;">Income</option>
+            </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Amount (TZS)</label>
+            <input type="number" step="0.01" name="amount" value="{{ form.amount.value|default:'' }}" class="glass"
+                style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border);">
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Description</label>
+            <textarea name="description" class="glass"
+                style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border); min-height: 100px;">{{ form.description.value|default:'' }}</textarea>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Save Entry</button>
+            <a href="{% url 'money_journal' %}" class="btn glass"
+                style="flex: 1; text-align: center; text-decoration: none; color: white;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
