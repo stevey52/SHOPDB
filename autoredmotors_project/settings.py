@@ -27,6 +27,11 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['mtawa.pythonanywhere.com', 'localhost', '127.0.0.1']
 
+# CSRF and Security Settings for PythonAnywhere
+CSRF_TRUSTED_ORIGINS = ['https://mtawa.pythonanywhere.com']
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
 
 # Application definition
 
