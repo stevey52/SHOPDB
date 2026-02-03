@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-cfm!b$44=c4l1b1_sne9jhez070rf4ag0e^2qms_vmb3x^_s(!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['https://www.pythonanywhere.com/user/mtawa/']
+ALLOWED_HOSTS = ['mtawa.pythonanywhere.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -124,7 +124,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
