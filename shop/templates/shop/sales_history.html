@@ -14,6 +14,12 @@
 <div class="filter-section glass"
     style="padding: 1rem; margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: flex-end;">
     <form method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; width: 100%;">
+        <div class="form-group" style="flex: 2; min-width: 200px;">
+            <label
+                style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">Search</label>
+            <input type="text" name="q" value="{{ search_query }}" placeholder="Search by product..." class="glass"
+                style="width: 100%; padding: 0.5rem; color: white; border-color: var(--glass-border);">
+        </div>
         <div class="form-group" style="flex: 1; min-width: 150px;">
             <label
                 style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">From</label>
@@ -61,5 +67,6 @@
             </tbody>
         </table>
     </div>
+    {% include 'shop/pagination.html' %}
 </div>
 {% endblock %}

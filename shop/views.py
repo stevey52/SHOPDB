@@ -4,7 +4,7 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView, T
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
-from django.db.models import Sum, F
+from django.db.models import Sum, F, Q
 from django.utils import timezone
 from .models import Product, InventoryMovement, Sale, MoneyJournal
 from .forms import SaleForm, MovementForm, MoneyJournalForm
@@ -67,6 +67,19 @@ class ProductListView(LoginRequiredMixin, ListView):
     model = Product
     template_name = 'shop/product_list.html'
     context_object_name = 'products'
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        query = self.request.GET.get('q')
+        if query:
+            queryset = queryset.filter(name__icontains=query)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('q', '')
+        return context
 
 class ProductCreateView(LoginRequiredMixin, CreateView):
     model = Product
@@ -90,6 +103,7 @@ class InventoryHistoryView(LoginRequiredMixin, ListView):
     template_name = 'shop/inventory_history.html'
     context_object_name = 'movements'
     ordering = ['-date']
+    paginate_by = 10
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -99,12 +113,20 @@ class InventoryHistoryView(LoginRequiredMixin, ListView):
             queryset = queryset.filter(date__date__gte=start_date)
         if end_date:
             queryset = queryset.filter(date__date__lte=end_date)
+            
+        query = self.request.GET.get('q')
+        if query:
+            queryset = queryset.filter(
+                Q(product__name__icontains=query) | 
+                Q(reference__icontains=query)
+            )
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['start_date'] = self.request.GET.get('start_date', '')
         context['end_date'] = self.request.GET.get('end_date', '')
+        context['search_query'] = self.request.GET.get('q', '')
         return context
 
 class SalesHistoryView(LoginRequiredMixin, ListView):
@@ -112,6 +134,7 @@ class SalesHistoryView(LoginRequiredMixin, ListView):
     template_name = 'shop/sales_history.html'
     context_object_name = 'sales'
     ordering = ['-date']
+    paginate_by = 10
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -121,12 +144,17 @@ class SalesHistoryView(LoginRequiredMixin, ListView):
             queryset = queryset.filter(date__date__gte=start_date)
         if end_date:
             queryset = queryset.filter(date__date__lte=end_date)
+            
+        query = self.request.GET.get('q')
+        if query:
+            queryset = queryset.filter(product__name__icontains=query)
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['start_date'] = self.request.GET.get('start_date', '')
         context['end_date'] = self.request.GET.get('end_date', '')
+        context['search_query'] = self.request.GET.get('q', '')
         return context
 
 class MoneyJournalView(LoginRequiredMixin, ListView):
@@ -134,6 +162,7 @@ class MoneyJournalView(LoginRequiredMixin, ListView):
     template_name = 'shop/money_journal.html'
     context_object_name = 'entries'
     ordering = ['-date']
+    paginate_by = 10
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -143,12 +172,17 @@ class MoneyJournalView(LoginRequiredMixin, ListView):
             queryset = queryset.filter(date__date__gte=start_date)
         if end_date:
             queryset = queryset.filter(date__date__lte=end_date)
+            
+        query = self.request.GET.get('q')
+        if query:
+            queryset = queryset.filter(description__icontains=query)
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['start_date'] = self.request.GET.get('start_date', '')
         context['end_date'] = self.request.GET.get('end_date', '')
+        context['search_query'] = self.request.GET.get('q', '')
         return context
 
 class LowStockView(LoginRequiredMixin, ListView):

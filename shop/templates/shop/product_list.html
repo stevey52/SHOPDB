@@ -11,6 +11,21 @@
         <i data-lucide="plus" style="vertical-align: middle; width: 18px; margin-right: 5px;"></i> Add Product
     </a>
 </div>
+<div class="filter-section glass"
+    style="padding: 1rem; margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center;">
+    <form method="GET" style="display: flex; gap: 1rem; flex-wrap: wrap; width: 100%;">
+        <div class="form-group" style="flex: 1; min-width: 250px;">
+            <input type="text" name="q" value="{{ search_query }}" placeholder="Search products..." class="glass"
+                style="width: 100%; padding: 0.6rem; color: white; border-color: var(--glass-border);">
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <button type="submit" class="btn btn-primary" style="padding: 0.6rem 1.2rem;">Search</button>
+            {% if search_query %}
+            <a href="?" class="btn glass" style="padding: 0.6rem 1.2rem; color: white; text-decoration: none;">Clear</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
 
 <div class="content-section glass" style="padding: 1.5rem;">
     <div class="table-container">
@@ -52,5 +67,6 @@
             </tbody>
         </table>
     </div>
+    {% include 'shop/pagination.html' %}
 </div>
 {% endblock %}
