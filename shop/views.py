@@ -93,6 +93,31 @@ class ProductUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'shop/product_form.html'
     success_url = reverse_lazy('product_list')
 
+    @transaction.atomic
+    def form_valid(self, form):
+        # Get the original product from the database to compare stock
+        original_product = Product.objects.get(pk=self.object.pk)
+        old_stock = original_product.current_stock
+        
+        # Save the form to update the product
+        response = super().form_valid(form)
+        new_stock = self.object.current_stock
+
+        # Check if stock has changed
+        if old_stock != new_stock:
+            diff = new_stock - old_stock
+            movement_type = 'IN' if diff > 0 else 'OUT'
+            quantity = abs(diff)
+
+            InventoryMovement.objects.create(
+                product=self.object,
+                movement_type=movement_type,
+                quantity=quantity,
+                reference='Manual Stock Update'
+            )
+
+        return response
+
 class ProductDeleteView(LoginRequiredMixin, DeleteView):
     model = Product
     template_name = 'shop/product_confirm_delete.html'
