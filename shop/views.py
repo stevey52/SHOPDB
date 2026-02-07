@@ -113,7 +113,7 @@ class ProductUpdateView(LoginRequiredMixin, UpdateView):
                 product=self.object,
                 movement_type=movement_type,
                 quantity=quantity,
-                reference='Manual Stock Update'
+                reference=f'Manual correction: {old_stock} -> {new_stock}'
             )
 
         return response
