@@ -198,6 +198,7 @@ class LowStockView(LoginRequiredMixin, ListView):
     model = Product
     template_name = 'shop/product_list.html'
     context_object_name = 'products'
+    ordering = ['name']
     
     def get_queryset(self):
         return Product.objects.filter(current_stock__lt=5)
