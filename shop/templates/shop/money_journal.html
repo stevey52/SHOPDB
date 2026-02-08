@@ -32,8 +32,8 @@
                 style="width: 100%; padding: 0.5rem; color: white; border-color: var(--glass-border);">
                 <option value="">All Categories</option>
                 {% for cat in categories %}
-                <option value="{{ cat.id }}" {% if selected_category|add:"0"==cat.id %}selected{% endif %}>{{ cat.name
-                    }}</option>
+                <option value="{{ cat.id }}" {% if selected_category|stringformat:"s"==cat.id|stringformat:"s"
+                    %}selected{% endif %}>{{ cat.name }}</option>
                 {% endfor %}
             </select>
         </div>
