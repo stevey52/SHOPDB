@@ -53,10 +53,12 @@
                             title="Edit">
                             <i data-lucide="edit-3" style="width: 18px;"></i>
                         </a>
+                        {% if is_manager %}
                         <a href="{% url 'product_delete' product.pk %}"
                             style="color: var(--text-danger); text-decoration: none;" title="Delete">
                             <i data-lucide="trash-2" style="width: 18px;"></i>
                         </a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}

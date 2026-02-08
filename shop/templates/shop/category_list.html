@@ -1,0 +1,41 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Expense Categories - Auto RedMotors{% endblock %}
+{% block header_title %}Expense Categories{% endblock %}
+
+{% block content %}
+<div class="content-header"
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h3 style="color: var(--text-secondary);">Manage Categories</h3>
+    <a href="{% url 'category_create' %}" class="btn btn-primary">
+        <i data-lucide="plus" style="vertical-align: middle; width: 18px; margin-right: 5px;"></i> Add Category
+    </a>
+</div>
+
+<div class="content-section glass" style="padding: 1.5rem;">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Category Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr>
+                    <td style="font-weight: 500;">{{ category.name }}</td>
+                    <td>
+                        <span style="color: var(--text-secondary); font-size: 0.9em;">-</span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2" style="text-align: center; color: var(--text-secondary);">No categories found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,6 +1,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +13,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     {% block extra_css %}{% endblock %}
 </head>
+
 <body>
     <div class="app-container">
         <!-- Sidebar -->
@@ -20,7 +22,7 @@
                 <i data-lucide="gauge"></i>
                 <span>ARM SHOP</span>
             </div>
-            
+
             <nav class="nav-links">
                 <li class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                     <a href="{% url 'dashboard' %}">
@@ -42,11 +44,18 @@
                         <i data-lucide="shopping-cart"></i> Sales
                     </a>
                 </li>
+                {% if is_manager %}
                 <li class="nav-item {% if request.resolver_match.url_name == 'money_journal' %}active{% endif %}">
                     <a href="{% url 'money_journal' %}">
                         <i data-lucide="wallet"></i> Money Journal
                     </a>
                 </li>
+                <li class="nav-item {% if request.resolver_match.url_name == 'profit_report' %}active{% endif %}">
+                    <a href="{% url 'profit_report' %}">
+                        <i data-lucide="trending-up"></i> Profit Report
+                    </a>
+                </li>
+                {% endif %}
                 <li class="nav-item {% if request.resolver_match.url_name == 'low_stock' %}active{% endif %}">
                     <a href="{% url 'low_stock' %}">
                         <i data-lucide="alert-triangle"></i> Low Stock
@@ -57,9 +66,10 @@
             <div style="margin-top: auto;">
                 {% if user.is_authenticated %}
                 <div class="nav-item">
-                     <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                    <form action="{% url 'logout' %}" method="post" style="display: inline;">
                         {% csrf_token %}
-                        <button type="submit" style="background:none; border:none; color:inherit; cursor:pointer; font:inherit; padding:0.75rem 1rem; width:100%; text-align:left;">
+                        <button type="submit"
+                            style="background:none; border:none; color:inherit; cursor:pointer; font:inherit; padding:0.75rem 1rem; width:100%; text-align:left;">
                             <i data-lucide="log-out"></i> Logout
                         </button>
                     </form>
@@ -96,4 +106,5 @@
     </script>
     {% block extra_js %}{% endblock %}
 </body>
+
 </html>

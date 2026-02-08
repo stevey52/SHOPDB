@@ -1,0 +1,46 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Add Category - Auto RedMotors{% endblock %}
+{% block header_title %}Add Category{% endblock %}
+
+{% block content %}
+<div class="content-section glass" style="max-width: 600px; margin: 0 auto; padding: 2rem;">
+    <h2 style="margin-bottom: 1.5rem; text-align: center;">New Expense Category</h2>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label for="{{ form.name.id_for_label }}" style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Category Name</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+            <div class="error-message" style="color: var(--text-danger); font-size: 0.85rem; margin-top: 0.25rem;">
+                {{ form.name.errors }}
+            </div>
+            {% endif %}
+        </div>
+        
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+            <a href="{% url 'category_list' %}" class="btn glass" style="text-decoration: none; color: white;">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save Category</button>
+        </div>
+    </form>
+</div>
+
+<style>
+    input[type="text"] {
+        width: 100%;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--glass-border);
+        border-radius: 8px;
+        color: white;
+        font-size: 1rem;
+    }
+    input[type="text"]:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        background: rgba(255, 255, 255, 0.1);
+    }
+</style>
+{% endblock %}

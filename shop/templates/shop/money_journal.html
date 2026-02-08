@@ -7,9 +7,14 @@
 <div class="content-header"
     style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
     <h3 style="color: var(--text-secondary);">Financial Records</h3>
-    <a href="{% url 'money_create' %}" class="btn btn-primary">
-        <i data-lucide="plus" style="vertical-align: middle; width: 18px; margin-right: 5px;"></i> Add Entry
-    </a>
+    <div style="display: flex; gap: 1rem;">
+        <a href="{% url 'category_list' %}" class="btn glass" style="color: white; text-decoration: none;">
+            Manage Categories
+        </a>
+        <a href="{% url 'money_create' %}" class="btn btn-primary">
+            <i data-lucide="plus" style="vertical-align: middle; width: 18px; margin-right: 5px;"></i> Add Entry
+        </a>
+    </div>
 </div>
 <div class="filter-section glass"
     style="padding: 1rem; margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: flex-end;">
@@ -19,6 +24,18 @@
                 style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">Search</label>
             <input type="text" name="q" value="{{ search_query }}" placeholder="Search description..." class="glass"
                 style="width: 100%; padding: 0.5rem; color: white; border-color: var(--glass-border);">
+        </div>
+        <div class="form-group" style="flex: 2; min-width: 200px;">
+            <label
+                style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">Category</label>
+            <select name="category" class="glass"
+                style="width: 100%; padding: 0.5rem; color: white; border-color: var(--glass-border);">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if selected_category|add:"0"==cat.id %}selected{% endif %}>{{ cat.name
+                    }}</option>
+                {% endfor %}
+            </select>
         </div>
         <div class="form-group" style="flex: 1; min-width: 150px;">
             <label
@@ -45,6 +62,7 @@
                 <tr>
                     <th>Date</th>
                     <th>Entry Type</th>
+                    <th>Category</th>
                     <th>Amount</th>
                     <th>Description</th>
                 </tr>
@@ -59,6 +77,7 @@
                             {{ entry.entry_type }}
                         </span>
                     </td>
+                    <td>{{ entry.category.name|default:"-" }}</td>
                     <td style="font-weight: 600;">TZS {{ entry.amount }}</td>
                     <td>{{ entry.description|default:"-" }}</td>
                 </tr>

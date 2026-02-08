@@ -37,6 +37,12 @@ class Sale(models.Model):
     def __str__(self):
         return f"Sale: {self.product.name} x {self.quantity}"
 
+class ExpenseCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    
+    def __str__(self):
+        return self.name
+
 class MoneyJournal(models.Model):
     JOURNAL_TYPES = [
         ('Income', 'Income'),
@@ -46,6 +52,7 @@ class MoneyJournal(models.Model):
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     date = models.DateTimeField(default=timezone.now)
     description = models.TextField(null=True, blank=True)
+    category = models.ForeignKey(ExpenseCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name='expenses')
 
     def __str__(self):
         return f"{self.entry_type}: {self.amount}"

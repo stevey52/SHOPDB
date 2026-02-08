@@ -23,4 +23,4 @@ class MovementForm(forms.ModelForm):
 class MoneyJournalForm(forms.ModelForm):
     class Meta:
         model = MoneyJournal
-        fields = ['entry_type', 'amount', 'description']
+        fields = ['entry_type', 'amount', 'category', 'description']

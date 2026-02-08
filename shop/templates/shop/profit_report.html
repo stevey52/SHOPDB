@@ -1,0 +1,61 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Profit Report - Auto RedMotors{% endblock %}
+{% block header_title %}Profitability Report{% endblock %}
+
+{% block content %}
+<div class="content-header"
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <h3 style="color: var(--text-secondary);">Product Performance</h3>
+</div>
+
+<div class="stats-grid" style="margin-bottom: 2rem;">
+    <div class="stat-card glass">
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value text-success">TZS {{ total_revenue_sum }}</div>
+    </div>
+    <div class="stat-card glass">
+        <div class="stat-label">Total Net Profit</div>
+        <div class="stat-value text-success">TZS {{ total_profit_sum }}</div>
+    </div>
+</div>
+
+<div class="content-section glass" style="padding: 1.5rem;">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Sold Qty</th>
+                    <th>Total Revenue</th>
+                    <th>Est. Total Cost</th>
+                    <th>Net Profit</th>
+                    <th>Margin</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in report_data %}
+                <tr>
+                    <td style="font-weight: 500;">{{ item.name }}</td>
+                    <td>{{ item.total_sold }}</td>
+                    <td>TZS {{ item.total_revenue }}</td>
+                    <td style="color: var(--text-secondary);">TZS {{ item.total_cost }}</td>
+                    <td style="font-weight: 600; color: var(--accent-color);">TZS {{ item.net_profit }}</td>
+                    <td>
+                        <span
+                            class="{% if item.margin >= 20 %}text-success{% elif item.margin >= 10 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ item.margin }}%
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-secondary);">No sales data available.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
