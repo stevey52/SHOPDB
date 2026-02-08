@@ -260,6 +260,7 @@ class ExpenseCategoryListView(ManagerRequiredMixin, LoginRequiredMixin, ListView
     model = ExpenseCategory
     template_name = 'shop/category_list.html'
     context_object_name = 'categories'
+    ordering = ['name']
 
 class ExpenseCategoryCreateView(ManagerRequiredMixin, LoginRequiredMixin, CreateView):
     model = ExpenseCategory
@@ -276,6 +277,7 @@ class MoneyJournalCreateView(ManagerRequiredMixin, LoginRequiredMixin, CreateVie
 class ProfitReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
     model = Product
     template_name = 'shop/profit_report.html'
+    ordering = ['name']
     
     def get_queryset(self):
         # Annotate with total quantity sold and total revenue
