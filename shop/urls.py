@@ -17,4 +17,5 @@ urlpatterns = [
     path('categories/', views.ExpenseCategoryListView.as_view(), name='category_list'),
     path('categories/add/', views.ExpenseCategoryCreateView.as_view(), name='category_create'),
     path('low-stock/', views.LowStockView.as_view(), name='low_stock'),
+    path('products/<int:pk>/quick-stock/', views.quick_stock_update, name='quick_stock_update'),
 ]

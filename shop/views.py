@@ -329,3 +329,39 @@ class ProfitReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
         context['total_revenue_sum'] = total_revenue_sum
         context['total_profit_sum'] = total_profit_sum
         return context
+
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
+
+@login_required
+@require_POST
+def quick_stock_update(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    action = request.POST.get('action')
+    
+    if action == 'add':
+        product.current_stock += 1
+        InventoryMovement.objects.create(
+            product=product,
+            movement_type='IN',
+            quantity=1,
+            reference='Quick Adjustment (+1)'
+        )
+        messages.success(request, f"Added 1 to {product.name} stock.")
+    elif action == 'remove':
+        if product.current_stock > 0:
+            product.current_stock -= 1
+            InventoryMovement.objects.create(
+                product=product,
+                movement_type='OUT',
+                quantity=1,
+                reference='Quick Adjustment (-1)'
+            )
+            messages.success(request, f"Removed 1 from {product.name} stock.")
+        else:
+            messages.warning(request, f"{product.name} stock is already 0.")
+            
+    product.save()
+    return redirect(request.META.get('HTTP_REFERER', 'product_list'))

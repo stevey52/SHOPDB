@@ -1,6 +1,6 @@
 {% extends 'shop/base.html' %}
 
-{% block title %}Products - Auto RedMotors{% endblock %}
+{% block title %}Products - BOMBA MOTORS{% endblock %}
 {% block header_title %}Products{% endblock %}
 
 {% block content %}
@@ -43,19 +43,31 @@
                 {% for product in products %}
                 <tr>
                     <td style="font-weight: 500;">{{ product.name }}</td>
-                    <td class="{% if product.current_stock < 5 %}text-danger{% endif %}">{{ product.current_stock }}
+                    <td class="{% if product.current_stock < 5 %}text-danger{% endif %}">
+                        <div style="display: flex; align-items: center; gap: 0.8rem;">
+                            <form action="{% url 'quick_stock_update' product.pk %}" method="POST" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="remove">
+                                <button type="submit" class="btn glass" style="padding: 0.2rem 0.5rem; line-height: 1; border-radius: 4px; color: var(--text-danger);" {% if product.current_stock == 0 %}disabled{% endif %}>-</button>
+                            </form>
+                            
+                            <span style="font-weight: 600; min-width: 20px; text-align: center;">{{ product.current_stock }}</span>
+                            
+                            <form action="{% url 'quick_stock_update' product.pk %}" method="POST" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="add">
+                                <button type="submit" class="btn glass" style="padding: 0.2rem 0.5rem; line-height: 1; border-radius: 4px; color: var(--text-success);">+</button>
+                            </form>
+                        </div>
                     </td>
                     <td>TZS {{ product.unit_price }}</td>
                     <td>TZS {{ product.cost_price }}</td>
                     <td>
-                        <a href="{% url 'product_update' product.pk %}"
-                            style="color: var(--accent-color); text-decoration: none; margin-right: 0.5rem;"
-                            title="Edit">
+                        <a href="{% url 'product_update' product.pk %}" style="color: var(--accent-color); text-decoration: none; margin-right: 0.5rem;" title="Edit">
                             <i data-lucide="edit-3" style="width: 18px;"></i>
                         </a>
                         {% if is_manager %}
-                        <a href="{% url 'product_delete' product.pk %}"
-                            style="color: var(--text-danger); text-decoration: none;" title="Delete">
+                        <a href="{% url 'product_delete' product.pk %}" style="color: var(--text-danger); text-decoration: none;" title="Delete">
                             <i data-lucide="trash-2" style="width: 18px;"></i>
                         </a>
                         {% endif %}
