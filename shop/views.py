@@ -269,9 +269,28 @@ class SaleDeleteView(ManagerRequiredMixin, LoginRequiredMixin, DeleteView):
              sale.journal_entries.all().delete()
         else:
              # Legacy cleanup attempt (heuristic match)
-             # We can't be 100% sure without ID, but let's leave it alone if not linked to avoid deleting wrong data.
-             pass
-        
+             # Try to find an entry with matching description and amount created around the same time
+             # We use a broad time window because auto_now_add vs explicit time can vary
+             from django.db.models import Q
+             from datetime import timedelta
+             
+             time_window = timedelta(minutes=1)
+             MoneyJournal.objects.filter(
+                 Q(sale__isnull=True) &
+                 Q(entry_type='Income') &
+                 Q(amount=sale.total_price) &
+                 Q(description__icontains=f'Sale of {product.name}') &
+                 Q(date__range=(sale.date - time_window, sale.date + time_window))
+             ).delete()
+
+        # EXTRA: Cleanup any "Reversal" entries that might have been created by intermediate code versions
+        # This fixes the specific issue reported where a reversal expense persists.
+        MoneyJournal.objects.filter(
+            entry_type='Expense',
+            description__icontains=f'Reversal: Deleted Sale of {product.name}',
+            amount=sale.total_price
+        ).delete()
+             
         messages.success(self.request, f"Sale of {product.name} deleted. Stock restored and records cleared.")
         return super().form_valid(form)
 
