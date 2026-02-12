@@ -11,6 +11,7 @@ urlpatterns = [
     path('inventory/add/', views.MovementCreateView.as_view(), name='inventory_create'),
     path('sales/', views.SalesHistoryView.as_view(), name='sales_history'),
     path('sales/add/', views.SaleCreateView.as_view(), name='sale_create'),
+    path('sales/<int:pk>/delete/', views.SaleDeleteView.as_view(), name='sale_delete'),
     path('money/', views.MoneyJournalView.as_view(), name='money_journal'),
     path('money/add/', views.MoneyJournalCreateView.as_view(), name='money_create'),
     path('profit-report/', views.ProfitReportView.as_view(), name='profit_report'),

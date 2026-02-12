@@ -48,6 +48,7 @@
                     <th>Quantity</th>
                     <th>Price at Sale</th>
                     <th>Total</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -58,10 +59,18 @@
                     <td>{{ sale.quantity }}</td>
                     <td>TZS {{ sale.price_at_sale }}</td>
                     <td style="font-weight: 600; color: var(--success);">TZS {{ sale.total_price }}</td>
+                    <td>
+                        {% if is_manager %}
+                        <a href="{% url 'sale_delete' sale.pk %}"
+                            style="color: var(--text-danger); text-decoration: none;" title="Delete">
+                            <i data-lucide="trash-2" style="width: 18px;"></i>
+                        </a>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" style="text-align: center; color: var(--text-secondary);">No sales recorded.</td>
+                    <td colspan="6" style="text-align: center; color: var(--text-secondary);">No sales recorded.</td>
                 </tr>
                 {% endfor %}
             </tbody>

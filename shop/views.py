@@ -238,6 +238,38 @@ class SaleCreateView(LoginRequiredMixin, CreateView):
         )
         return super().form_valid(form)
 
+class SaleDeleteView(ManagerRequiredMixin, LoginRequiredMixin, DeleteView):
+    model = Sale
+    template_name = 'shop/sale_confirm_delete.html'
+    success_url = reverse_lazy('sales_history')
+
+    @transaction.atomic
+    def form_valid(self, form):
+        sale = self.get_object()
+        product = sale.product
+        
+        # 1. Restore Product Stock
+        product.current_stock += sale.quantity
+        product.save()
+
+        # 2. Record Inventory Movement (IN) - Reversal
+        InventoryMovement.objects.create(
+            product=product,
+            movement_type='IN',
+            quantity=sale.quantity,
+            reference=f'Sale Deleted (ID: {sale.id})'
+        )
+
+        # 3. Record Money Journal Entry (Expense) - Financial Reversal
+        MoneyJournal.objects.create(
+            entry_type='Expense',
+            amount=sale.total_price,
+            description=f'Reversal: Deleted Sale of {product.name} (x{sale.quantity})'
+        )
+        
+        messages.success(self.request, f"Sale of {product.name} deleted and stock restored.")
+        return super().form_valid(form)
+
 class MovementCreateView(LoginRequiredMixin, CreateView):
     model = InventoryMovement
     form_class = MovementForm
