@@ -225,6 +225,7 @@ class SaleCreateView(LoginRequiredMixin, CreateView):
         # 2. Record Inventory Movement (OUT)
         InventoryMovement.objects.create(
             product=product,
+            sale=sale,
             movement_type='OUT',
             quantity=sale.quantity,
             reference=f'Sale ID: {sale.id}'
@@ -234,7 +235,8 @@ class SaleCreateView(LoginRequiredMixin, CreateView):
         MoneyJournal.objects.create(
             entry_type='Income',
             amount=sale.total_price,
-            description=f'Sale of {product.name} (x{sale.quantity})'
+            description=f'Sale of {product.name} (x{sale.quantity})',
+            sale=sale
         )
         return super().form_valid(form)
 
@@ -252,22 +254,25 @@ class SaleDeleteView(ManagerRequiredMixin, LoginRequiredMixin, DeleteView):
         product.current_stock += sale.quantity
         product.save()
 
-        # 2. Record Inventory Movement (IN) - Reversal
-        InventoryMovement.objects.create(
-            product=product,
-            movement_type='IN',
-            quantity=sale.quantity,
-            reference=f'Sale Deleted (ID: {sale.id})'
-        )
+        # 2. Delete linked movements and journal entries (Clean Undo)
+        # If they are linked via FK (new sales), they will theoretically cascade delete when sale is deleted,
+        # BUT we want to be sure and also handle legacy sales that might not have the link.
 
-        # 3. Record Money Journal Entry (Expense) - Financial Reversal
-        MoneyJournal.objects.create(
-            entry_type='Expense',
-            amount=sale.total_price,
-            description=f'Reversal: Deleted Sale of {product.name} (x{sale.quantity})'
-        )
+        # Try to delete linked items explicitly or by reference for legacy support
+        if hasattr(sale, 'inventory_movements') and sale.inventory_movements.exists():
+             sale.inventory_movements.all().delete()
+        else:
+             # Legacy cleanup attempt
+             InventoryMovement.objects.filter(reference=f'Sale ID: {sale.id}').delete()
         
-        messages.success(self.request, f"Sale of {product.name} deleted and stock restored.")
+        if hasattr(sale, 'journal_entries') and sale.journal_entries.exists():
+             sale.journal_entries.all().delete()
+        else:
+             # Legacy cleanup attempt (heuristic match)
+             # We can't be 100% sure without ID, but let's leave it alone if not linked to avoid deleting wrong data.
+             pass
+        
+        messages.success(self.request, f"Sale of {product.name} deleted. Stock restored and records cleared.")
         return super().form_valid(form)
 
 class MovementCreateView(LoginRequiredMixin, CreateView):

@@ -16,6 +16,7 @@ class InventoryMovement(models.Model):
         ('OUT', 'Stock Out'),
     ]
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='movements')
+    sale = models.ForeignKey('Sale', on_delete=models.CASCADE, null=True, blank=True, related_name='inventory_movements')
     movement_type = models.CharField(max_length=3, choices=MOVEMENT_TYPES)
     quantity = models.IntegerField()
     date = models.DateTimeField(default=timezone.now)
@@ -53,6 +54,7 @@ class MoneyJournal(models.Model):
     date = models.DateTimeField(default=timezone.now)
     description = models.TextField(null=True, blank=True)
     category = models.ForeignKey(ExpenseCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name='expenses')
+    sale = models.ForeignKey(Sale, on_delete=models.CASCADE, null=True, blank=True, related_name='journal_entries')
 
     def __str__(self):
         return f"{self.entry_type}: {self.amount}"
