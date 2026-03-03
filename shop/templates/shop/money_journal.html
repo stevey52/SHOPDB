@@ -32,7 +32,7 @@
                 style="width: 100%; padding: 0.5rem; color: white; border-color: var(--glass-border);">
                 <option value="">All Categories</option>
                 {% for cat in categories %}
-                <option value="{{ cat.id }}" {% if selected_category|stringformat:"s" == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                <option value="{{ cat.id }}">{{ cat.name }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -64,6 +64,7 @@
                     <th>Category</th>
                     <th>Amount</th>
                     <th>Description</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -78,7 +79,23 @@
                     </td>
                     <td>{{ entry.category.name|default:"-" }}</td>
                     <td style="font-weight: 600;">TZS {{ entry.amount }}</td>
-                    <td>{{ entry.description|default:"-" }}</td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            {% if entry.sale %}
+                            <i data-lucide="shopping-cart" style="width: 14px; color: var(--primary);"></i>
+                            {% elif entry.debt_payment %}
+                            <i data-lucide="receipt" style="width: 14px; color: #4ade80;"></i>
+                            {% endif %}
+                            {{ entry.description|default:"-" }}
+                        </div>
+                    </td>
+                    <td>
+                        {% if is_manager %}
+                        <a href="{% url 'money_delete' entry.pk %}" class="text-danger" title="Delete Entry">
+                            <i data-lucide="trash-2" style="width: 18px;"></i>
+                        </a>
+                        {% endif %}
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>

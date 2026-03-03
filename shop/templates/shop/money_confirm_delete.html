@@ -1,29 +1,33 @@
 {% extends 'shop/base.html' %}
 
-{% block title %}Delete Sale - BOMBA MOTORS{% endblock %}
-{% block header_title %}Delete Sale{% endblock %}
+{% block title %}Delete Journal Entry - BOMBA MOTORS{% endblock %}
+{% block header_title %}Delete Journal Entry{% endblock %}
 
 {% block content %}
 <div class="content-section glass" style="padding: 2rem; max-width: 600px; margin: 0 auto;">
     <h3 style="color: var(--text-danger); margin-bottom: 1rem;">Confirm Deletion</h3>
     <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">
-        Are you sure you want to delete the sale of
-        <strong>{{ object.product.name }}</strong> recorded on
-        {{ object.date|date:"Y-m-d H:i" }}?
+        Are you sure you want to delete the <strong>{{ object.entry_type }}</strong> entry for
+        <strong>TZS {{ object.amount }}</strong>?
     </p>
+
+    {% if object.description %}
+    <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">
+        Description: {{ object.description }}
+    </p>
+    {% endif %}
 
     <div class="alert glass"
         style="border-color: var(--warning); color: var(--warning); padding: 1rem; margin-bottom: 1.5rem;">
         <i data-lucide="alert-triangle" style="vertical-align: middle; width: 18px; margin-right: 5px;"></i>
-        <strong>Warning:</strong> This will restore
-        {{ object.quantity }} units to the product stock and record a financial reversal.
+        <strong>Warning:</strong> This will permanently remove this financial record.
     </div>
 
     <form method="post">
         {% csrf_token %}
         <div style="display: flex; gap: 1rem;">
             <button type="submit" class="btn btn-danger">Confirm Delete</button>
-            <a href="{% url 'sales_history' %}" class="btn glass"
+            <a href="{% url 'money_journal' %}" class="btn glass"
                 style="color: white; text-decoration: none;">Cancel</a>
         </div>
     </form>

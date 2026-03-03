@@ -14,31 +14,116 @@
         {% endif %}
 
         <div class="form-group" style="margin-bottom: 1.5rem;">
-            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Product</label>
-            <select name="product" class="glass"
-                style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border); background: var(--glass-bg);">
-                {% for product in form.product.field.queryset %}
-                <option value="{{ product.pk }}" style="color: black;">{{ product.name }}</option>
-                {% endfor %}
-            </select>
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Date</label>
+            {{ form.date }}
+            {% if form.date.errors %}
+            <div class="text-danger">{{ form.date.errors }}</div>
+            {% endif %}
+            <p style="font-size: 0.75rem; margin-top: 0.4rem; color: rgba(255, 255, 255, 0.4);">Leave as is for current
+                time, or pick a past date.</p>
         </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Product</label>
+            {{ form.product }}
+            {% if form.product.errors %}
+            <div class="text-danger">{{ form.product.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group"
+            style="margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem; background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px;">
+            <div style="flex: 1; display: flex; align-items: center; gap: 0.5rem;">
+                <label style="font-weight: 600; margin: 0; cursor: pointer;" for="id_is_credit">
+                    <i data-lucide="credit-card" style="width: 18px; vertical-align: middle; margin-right: 4px;"></i>
+                    Credit Sale
+                </label>
+                {{ form.is_credit }}
+            </div>
+            <div style="font-size: 0.8rem; color: rgba(255, 255, sales_255, 0.5);">Mark if client pays later</div>
+        </div>
+
+        <div id="credit-fields"
+            style="display: none; background: rgba(255, 255, 255, 0.03); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px dashed rgba(255, 255, 255, 0.1);">
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Client (required for
+                    credit)</label>
+                {{ form.client }}
+                <p style="font-size: 0.75rem; margin-top: 0.4rem; color: rgba(255, 255, 255, 0.4);">
+                    <a href="{% url 'client_create' %}" style="color: var(--primary);">+ Create new client</a>
+                </p>
+                {% if form.client.errors %}
+                <div class="text-danger">{{ form.client.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Amount Paid Upfront
+                    (TZS)</label>
+                {{ form.amount_paid }}
+                <p style="font-size: 0.75rem; margin-top: 0.4rem; color: rgba(255, 255, 255, 0.4);">Leave as 0 if no
+                    payment made today.</p>
+                {% if form.amount_paid.errors %}
+                <div class="text-danger">{{ form.amount_paid.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+
         <div class="form-group" style="margin-bottom: 1.5rem;">
             <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Quantity</label>
-            <input type="number" name="quantity" value="{{ form.quantity.value|default:1 }}" class="glass"
-                style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border);">
+            {{ form.quantity }}
+            {% if form.quantity.errors %}
+            <div class="text-danger">{{ form.quantity.errors }}</div>
+            {% endif %}
         </div>
+
         <div class="form-group" style="margin-bottom: 1.5rem;">
             <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Price at Sale
                 (TZS)</label>
-            <input type="number" step="0.01" name="price_at_sale" value="{{ form.price_at_sale.value|default:'' }}"
-                class="glass" style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border);">
+            {{ form.price_at_sale }}
+            {% if form.price_at_sale.errors %}
+            <div class="text-danger">{{ form.price_at_sale.errors }}</div>
+            {% endif %}
         </div>
 
         <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-            <button type="submit" class="btn btn-primary" style="flex: 1;">Record Sale</button>
+            <button type="submit" class="btn btn-primary" style="flex: 1; padding: 1rem;">Record Sale</button>
             <a href="{% url 'sales_history' %}" class="btn glass"
-                style="flex: 1; text-align: center; text-decoration: none; color: white;">Cancel</a>
+                style="flex: 1; text-align: center; text-decoration: none; color: white; padding: 1rem;">Cancel</a>
         </div>
     </form>
 </div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const creditCheckbox = document.querySelector('input[name="is_credit"]');
+        const creditFields = document.getElementById('credit-fields');
+        const clientSelect = document.querySelector('select[name="client"]');
+
+        function toggleCreditFields() {
+            if (creditCheckbox.checked) {
+                creditFields.style.display = 'block';
+            } else {
+                creditFields.style.display = 'none';
+            }
+        }
+
+        // Auto-handle URL params for pre-selection
+        const urlParams = new URLSearchParams(window.location.search);
+        const preClient = urlParams.get('client');
+        const preIsCredit = urlParams.get('is_credit');
+
+        if (preClient && clientSelect) {
+            clientSelect.value = preClient;
+        }
+        if (preIsCredit === 'True' && creditCheckbox) {
+            creditCheckbox.checked = true;
+        }
+
+        creditCheckbox.addEventListener('change', toggleCreditFields);
+        toggleCreditFields(); // Initial state
+    });
+</script>
+{% endblock %}
 {% endblock %}

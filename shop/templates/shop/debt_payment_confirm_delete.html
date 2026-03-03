@@ -1,0 +1,30 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Delete Debt Payment - BOMBA MOTORS{% endblock %}
+{% block header_title %}Confirm Payment Deletion{% endblock %}
+
+{% block content %}
+<div class="content-section glass" style="padding: 2rem; max-width: 600px; margin: 0 auto;">
+    <h3 style="color: var(--text-danger); margin-bottom: 1rem;">Delete Payment</h3>
+    <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">
+        Are you sure you want to delete the payment of <strong>TZS {{ object.amount }}</strong>
+        recorded for <strong>{{ object.client.name }}</strong> on {{ object.date|date:"M d, Y" }}?
+    </p>
+
+    <div class="alert glass"
+        style="border-color: var(--warning); color: var(--warning); padding: 1rem; margin-bottom: 1.5rem;">
+        <i data-lucide="alert-triangle" style="width: 18px; vertical-align: middle; margin-right: 5px;"></i>
+        <strong>Effect:</strong> This will increase the client's balance and remove the income record from the Money
+        Journal.
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div style="display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-danger">Confirm Delete</button>
+            <a href="{% url 'client_detail' object.client.pk %}" class="btn glass"
+                style="color: white; text-decoration: none;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

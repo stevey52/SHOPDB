@@ -1,0 +1,83 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Clients - BOMBA MOTORS{% endblock %}
+
+{% block header_title %}Clients & Debt Management{% endblock %}
+
+{% block content %}
+<div class="actions-bar"
+    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <form method="GET" class="search-form glass"
+        style="display: flex; gap: 0.5rem; padding: 0.5rem; border-radius: 8px;">
+        <input type="text" name="q" placeholder="Search clients..." value="{{ search_query }}"
+            style="background: transparent; border: none; color: white; padding: 0.5rem; outline: none; width: 250px;">
+        <button type="submit"
+            style="background: var(--primary); border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">
+            <i data-lucide="search" style="width: 18px; height: 18px;"></i>
+        </button>
+    </form>
+
+    <a href="{% url 'client_create' %}" class="btn btn-primary glass"
+        style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600;">
+        <i data-lucide="plus-circle"></i> Add New Client
+    </a>
+</div>
+
+<div class="table-container glass" style="overflow: hidden; border-radius: 12px;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="background: rgba(255, 255, 255, 0.05); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                <th style="padding: 1.25rem 1.5rem; font-weight: 600;">Name</th>
+                <th style="padding: 1.25rem 1.5rem; font-weight: 600;">Phone</th>
+                <th style="padding: 1.25rem 1.5rem; font-weight: 600;">Current Debt</th>
+                <th style="padding: 1.25rem 1.5rem; font-weight: 600; text-align: right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for client in clients %}
+            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: background 0.2s;"
+                onmouseover="this.style.background='rgba(255, 255, 255, 0.02)'"
+                onmouseout="this.style.background='transparent'">
+                <td style="padding: 1.25rem 1.5rem; font-weight: 500;">{{ client.name }}</td>
+                <td style="padding: 1.25rem 1.5rem; color: rgba(255, 255, 255, 0.7);">{{ client.phone|default:"---" }}
+                </td>
+                <td style="padding: 1.25rem 1.5rem;">
+                    <span class="{% if client.total_debt > 0 %}text-danger{% else %}text-success{% endif %}"
+                        style="font-weight: 600;">
+                        TZS {{ client.total_debt|floatformat:2 }}
+                    </span>
+                </td>
+                <td style="padding: 1.25rem 1.5rem; text-align: right;">
+                    <a href="{% url 'client_detail' client.pk %}" class="btn glass"
+                        style="padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.9rem; text-decoration: none; color: white;">
+                        View History
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="padding: 3rem; text-align: center; color: rgba(255, 255, 255, 0.5);">
+                    No clients found.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if is_paginated %}
+<div class="pagination" style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}"
+        class="btn glass">&laquo; Previous</a>
+    {% endif %}
+
+    <span style="padding: 0.5rem 1rem;" class="glass">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}"
+        class="btn glass">Next &raquo;</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

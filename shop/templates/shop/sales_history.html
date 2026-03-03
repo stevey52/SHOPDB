@@ -61,10 +61,18 @@
                     <td style="font-weight: 600; color: var(--success);">TZS {{ sale.total_price }}</td>
                     <td>
                         {% if is_manager %}
-                        <a href="{% url 'sale_delete' sale.pk %}"
-                            style="color: var(--text-danger); text-decoration: none;" title="Delete">
-                            <i data-lucide="trash-2" style="width: 18px;"></i>
-                        </a>
+                        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                            <a href="{% url 'sale_update' sale.pk %}" class="btn glass"
+                                style="padding: 0.3rem 0.6rem; border-radius: 6px; color: var(--primary);"
+                                title="Edit Sale">
+                                <i data-lucide="edit-3" style="width: 14px;"></i>
+                            </a>
+                            <a href="{% url 'sale_delete' sale.pk %}" class="btn glass"
+                                style="padding: 0.3rem 0.6rem; border-radius: 6px; color: var(--text-danger);"
+                                title="Delete Sale">
+                                <i data-lucide="trash-2" style="width: 14px;"></i>
+                            </a>
+                        </div>
                         {% endif %}
                     </td>
                 </tr>

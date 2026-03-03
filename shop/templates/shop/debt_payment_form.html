@@ -1,0 +1,68 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Record Payment - BOMBA MOTORS{% endblock %}
+
+{% block header_title %}Record Debt Payment{% endblock %}
+
+{% block content %}
+<div class="form-container glass" style="max-width: 600px; margin: 0 auto; padding: 2.5rem; border-radius: 12px;">
+    <form method="POST">
+        {% csrf_token %}
+
+        <div style="margin-bottom: 2rem;">
+            <label
+                style="display: block; margin-bottom: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7);">Client</label>
+            {{ form.client }}
+            {% if form.client.errors %}
+            <div class="text-danger" style="margin-top: 0.5rem; font-size: 0.9rem;">{{ form.client.errors }}</div>
+            {% endif %}
+            <p style="margin-top: 0.5rem; font-size: 0.85rem; color: rgba(255, 255, 255, 0.5);">
+                Only clients with outstanding debt are shown below if filtered.
+            </p>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+            <label
+                style="display: block; margin-bottom: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7);">Payment
+                Amount (TZS)</label>
+            {{ form.amount }}
+            {% if form.amount.errors %}
+            <div class="text-danger" style="margin-top: 0.5rem; font-size: 0.9rem;">{{ form.amount.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div style="margin-bottom: 2.5rem;">
+            <label
+                style="display: block; margin-bottom: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7);">Notes
+                / Reference (Optional)</label>
+            {{ form.notes }}
+            {% if form.notes.errors %}
+            <div class="text-danger" style="margin-top: 0.5rem; font-size: 0.9rem;">{{ form.notes.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button type="submit" class="btn btn-primary"
+                style="flex: 1; padding: 1rem; font-weight: 600; border-radius: 8px;">
+                Record Payment
+            </button>
+            <a href="{% url 'client_list' %}" class="btn glass"
+                style="flex: 1; text-align: center; text-decoration: none; padding: 1rem; color: white; border-radius: 8px;">
+                Back to Clients
+            </a>
+        </div>
+    </form>
+</div>
+
+{% if request.GET.client %}
+<script>
+    // Auto-select client if passed in URL
+    document.addEventListener('DOMContentLoaded', function () {
+        const clientSelect = document.querySelector('select[name="client"]');
+        if (clientSelect) {
+            clientSelect.value = "{{ request.GET.client }}";
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

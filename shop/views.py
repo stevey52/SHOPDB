@@ -6,8 +6,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.db.models import Sum, F, Q
 from django.utils import timezone
-from .models import Product, InventoryMovement, Sale, MoneyJournal, ExpenseCategory
-from .forms import SaleForm, MovementForm, MoneyJournalForm
+from django.contrib import messages
+from .models import Product, InventoryMovement, Sale, MoneyJournal, ExpenseCategory, Client, DebtPayment
+from .forms import SaleForm, MovementForm, MoneyJournalForm, ClientForm, DebtPaymentForm
 from .mixins import ManagerRequiredMixin
 
 class MyLogoutView(auth_views.LogoutView):
@@ -22,9 +23,13 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context['total_products'] = Product.objects.count()
         context['low_stock'] = Product.objects.filter(current_stock__lt=5).count()
-        context['total_income'] = MoneyJournal.objects.filter(entry_type='Income').aggregate(Sum('amount'))['amount__sum'] or 0
-        context['total_expense'] = MoneyJournal.objects.filter(entry_type='Expense').aggregate(Sum('amount'))['amount__sum'] or 0
-        context['balance'] = context['total_income'] - context['total_expense']
+        context['total_income'] = float(MoneyJournal.objects.filter(entry_type='Income').aggregate(Sum('amount'))['amount__sum'] or 0)
+        context['total_expense'] = float(MoneyJournal.objects.filter(entry_type='Expense').aggregate(Sum('amount'))['amount__sum'] or 0)
+        context['balance'] = round(context['total_income'] - context['total_expense'], 2)
+        
+        # Debt Stats
+        total_owed = sum(c.total_debt for c in Client.objects.all())
+        context['total_debt'] = float(total_owed)
         
         # Calculate last 7 days data
         days = []
@@ -36,14 +41,13 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             date = timezone.now().date() - timezone.timedelta(days=i)
             days.append(date.strftime('%b %d'))
             
-            # Daily Sales
+            # Daily Sales (Total Volume - Accrual)
             daily_sales = Sale.objects.filter(date__date=date).aggregate(
                 total=Sum(F('quantity') * F('price_at_sale'))
             )['total'] or 0
             sales_data.append(float(daily_sales))
             
-            # Daily Profit (Revenue - Cost of Goods Sold)
-            daily_revenue = daily_sales
+            # Daily COGS
             daily_cogs = Sale.objects.filter(date__date=date).aggregate(
                 total=Sum(F('quantity') * F('product__cost_price'))
             )['total'] or 0
@@ -54,9 +58,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             )['total'] or 0
             expenses_data.append(float(daily_expenses))
             
-            # Profit = Revenue - COGS - Expenses
-            daily_profit = float(daily_revenue) - float(daily_cogs) - float(daily_expenses)
-            profit_data.append(daily_profit)
+            # Profit = Total Sales Value - COGS - Expenses (Accrual)
+            # This ensures that credit sales don't look like losses because of COGS.
+            daily_profit = float(daily_sales) - float(daily_cogs) - float(daily_expenses)
+            profit_data.append(round(daily_profit, 2))
 
         context['chart_labels'] = days
         context['chart_sales'] = sales_data
@@ -100,6 +105,42 @@ class ProductDeleteView(ManagerRequiredMixin, LoginRequiredMixin, DeleteView):
     model = Product
     template_name = 'shop/product_confirm_delete.html'
     success_url = reverse_lazy('product_list')
+
+class ClientListView(LoginRequiredMixin, ListView):
+    model = Client
+    template_name = 'shop/client_list.html'
+    context_object_name = 'clients'
+    paginate_by = 10
+    ordering = ['name']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        query = self.request.GET.get('q')
+        if query:
+            queryset = queryset.filter(name__icontains=query)
+        return queryset
+
+class ClientDetailView(LoginRequiredMixin, ListView):
+    model = Sale
+    template_name = 'shop/client_detail.html'
+    context_object_name = 'sales'
+    paginate_by = 10
+
+    def get_queryset(self):
+        self.client = get_object_or_404(Client, pk=self.kwargs['pk'])
+        return Sale.objects.filter(client=self.client).order_by('-date')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['client'] = self.client
+        context['payments'] = DebtPayment.objects.filter(client=self.client).order_by('-date')
+        return context
+
+class ClientCreateView(LoginRequiredMixin, CreateView):
+    model = Client
+    form_class = ClientForm
+    template_name = 'shop/client_form.html'
+    success_url = reverse_lazy('client_list')
 
 class InventoryHistoryView(LoginRequiredMixin, ListView):
     model = InventoryMovement
@@ -150,7 +191,10 @@ class SalesHistoryView(LoginRequiredMixin, ListView):
             
         query = self.request.GET.get('q')
         if query:
-            queryset = queryset.filter(product__name__icontains=query)
+            queryset = queryset.filter(
+                Q(product__name__icontains=query) |
+                Q(client__name__icontains=query)
+            )
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -228,16 +272,26 @@ class SaleCreateView(LoginRequiredMixin, CreateView):
             sale=sale,
             movement_type='OUT',
             quantity=sale.quantity,
+            date=sale.date,
             reference=f'Sale ID: {sale.id}'
         )
 
         # 3. Record Money Journal Entry (Income)
-        MoneyJournal.objects.create(
-            entry_type='Income',
-            amount=sale.total_price,
-            description=f'Sale of {product.name} (x{sale.quantity})',
-            sale=sale
-        )
+        # For credit sales, we only record the upfront payment as income.
+        amount_to_record = sale.total_price if not sale.is_credit else sale.amount_paid
+        
+        if amount_to_record > 0:
+            description = f'Sale of {product.name} (x{sale.quantity})'
+            if sale.is_credit:
+                description += f' - Partial Payment from {sale.client.name}'
+            
+            MoneyJournal.objects.create(
+                entry_type='Income',
+                amount=amount_to_record,
+                description=description,
+                date=sale.date,
+                sale=sale
+            )
         return super().form_valid(form)
 
 class SaleDeleteView(ManagerRequiredMixin, LoginRequiredMixin, DeleteView):
@@ -254,44 +308,122 @@ class SaleDeleteView(ManagerRequiredMixin, LoginRequiredMixin, DeleteView):
         product.current_stock += sale.quantity
         product.save()
 
-        # 2. Delete linked movements and journal entries (Clean Undo)
-        # If they are linked via FK (new sales), they will theoretically cascade delete when sale is deleted,
-        # BUT we want to be sure and also handle legacy sales that might not have the link.
-
-        # Try to delete linked items explicitly or by reference for legacy support
-        if hasattr(sale, 'inventory_movements') and sale.inventory_movements.exists():
+        # 2. Cleanup records
+        if hasattr(sale, 'inventory_movements'):
              sale.inventory_movements.all().delete()
-        else:
-             # Legacy cleanup attempt
-             InventoryMovement.objects.filter(reference=f'Sale ID: {sale.id}').delete()
-        
-        if hasattr(sale, 'journal_entries') and sale.journal_entries.exists():
+        if hasattr(sale, 'journal_entries'):
              sale.journal_entries.all().delete()
-        else:
-             # Legacy cleanup attempt (heuristic match)
-             # Try to find an entry with matching description and amount created around the same time
-             # We use a broad time window because auto_now_add vs explicit time can vary
-             from django.db.models import Q
-             from datetime import timedelta
-             
-             time_window = timedelta(minutes=1)
-             MoneyJournal.objects.filter(
-                 Q(sale__isnull=True) &
-                 Q(entry_type='Income') &
-                 Q(amount=sale.total_price) &
-                 Q(description__icontains=f'Sale of {product.name}') &
-                 Q(date__range=(sale.date - time_window, sale.date + time_window))
-             ).delete()
+        
+        # Fix legacy references (orphan entries not explicitly linked)
+        InventoryMovement.objects.filter(reference=f'Sale ID: {sale.id}').delete()
+        from datetime import timedelta
+        # Expanded window to 1 hour to be robust against manual entry/lag
+        time_window = timedelta(hours=1)
+        
+        # Search for unlinked Income entries matching this sale's product and quantity
+        MoneyJournal.objects.filter(
+            Q(sale__isnull=True),
+            Q(entry_type='Income'),
+            Q(description__icontains=f'Sale of {product.name} (x{sale.quantity})'),
+            Q(amount__in=[sale.total_price, sale.amount_paid]),
+            Q(date__range=(sale.date - time_window, sale.date + time_window))
+        ).delete()
 
-        # EXTRA: Cleanup any "Reversal" entries that might have been created by intermediate code versions
-        # This fixes the specific issue reported where a reversal expense persists.
+        # Clean up any "Reversal" expenses that might have been created by old logic
         MoneyJournal.objects.filter(
             entry_type='Expense',
             description__icontains=f'Reversal: Deleted Sale of {product.name}',
-            amount=sale.total_price
         ).delete()
              
         messages.success(self.request, f"Sale of {product.name} deleted. Stock restored and records cleared.")
+        return super().form_valid(form)
+
+class DebtPaymentCreateView(LoginRequiredMixin, CreateView):
+    model = DebtPayment
+    form_class = DebtPaymentForm
+    template_name = 'shop/debt_payment_form.html'
+    
+    def get_success_url(self):
+        return reverse_lazy('client_detail', kwargs={'pk': self.object.client.pk})
+
+    def get_initial(self):
+        initial = super().get_initial()
+        client_id = self.request.GET.get('client')
+        if client_id:
+            initial['client'] = client_id
+        return initial
+
+    @transaction.atomic
+    def form_valid(self, form):
+        payment = form.save()
+        # Record Income in Money Journal
+        MoneyJournal.objects.create(
+            entry_type='Income',
+            amount=payment.amount,
+            description=f'Debt Payment from {payment.client.name}',
+            debt_payment=payment
+        )
+        messages.success(self.request, f"Payment of {payment.amount} recorded for {payment.client.name}.")
+        return super().form_valid(form)
+
+class DebtPaymentDeleteView(ManagerRequiredMixin, LoginRequiredMixin, DeleteView):
+    model = DebtPayment
+    template_name = 'shop/debt_payment_confirm_delete.html'
+    
+    def get_success_url(self):
+        return reverse_lazy('client_detail', kwargs={'pk': self.object.client.pk})
+
+    @transaction.atomic
+    def form_valid(self, form):
+        payment = self.get_object()
+        # Remove corresponding entry in Money Journal
+        MoneyJournal.objects.filter(debt_payment=payment).delete()
+        messages.success(self.request, f"Payment of {payment.amount} removed. Client balance updated.")
+        return super().form_valid(form)
+
+class SaleUpdateView(ManagerRequiredMixin, LoginRequiredMixin, UpdateView):
+    model = Sale
+    form_class = SaleForm
+    template_name = 'shop/sale_form.html'
+    success_url = reverse_lazy('sales_history')
+
+    @transaction.atomic
+    def form_valid(self, form):
+        old_sale = Sale.objects.get(pk=self.object.pk)
+        old_quantity = old_sale.quantity
+        old_product = old_sale.product
+        
+        sale = form.save()
+        
+        # 1. Handle stock changes if product or quantity changed
+        if old_product != sale.product:
+            old_product.current_stock += old_quantity
+            old_product.save()
+            sale.product.current_stock -= sale.quantity
+            sale.product.save()
+        elif old_quantity != sale.quantity:
+            sale.product.current_stock += (old_quantity - sale.quantity)
+            sale.product.save()
+
+        # 2. Update/Sync Money Journal and Inventory Movement Dates
+        MoneyJournal.objects.filter(sale=sale).delete()
+        InventoryMovement.objects.filter(sale=sale).update(date=sale.date)
+        
+        amount_to_record = sale.total_price if not sale.is_credit else sale.amount_paid
+        if amount_to_record > 0:
+            description = f'Sale of {sale.product.name} (x{sale.quantity})'
+            if sale.is_credit:
+                description += f' - Partial Payment from {sale.client.name}'
+            
+            MoneyJournal.objects.create(
+                entry_type='Income',
+                amount=amount_to_record,
+                description=description,
+                date=sale.date,
+                sale=sale
+            )
+            
+        messages.success(self.request, f"Sale updated successfully.")
         return super().form_valid(form)
 
 class MovementCreateView(LoginRequiredMixin, CreateView):
@@ -390,6 +522,15 @@ from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
+
+class MoneyJournalDeleteView(ManagerRequiredMixin, LoginRequiredMixin, DeleteView):
+    model = MoneyJournal
+    template_name = 'shop/money_confirm_delete.html'
+    success_url = reverse_lazy('money_journal')
+
+    def form_valid(self, form):
+        messages.success(self.request, "Journal entry deleted successfully.")
+        return super().form_valid(form)
 
 @login_required
 @require_POST

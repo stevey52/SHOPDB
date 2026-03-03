@@ -44,6 +44,12 @@
                         <i data-lucide="shopping-cart"></i> Sales
                     </a>
                 </li>
+                <li
+                    class="nav-item {% if request.resolver_match.url_name == 'client_list' or request.resolver_match.url_name == 'client_detail' %}active{% endif %}">
+                    <a href="{% url 'client_list' %}">
+                        <i data-lucide="users"></i> Clients & Debt
+                    </a>
+                </li>
                 {% if is_manager %}
                 <li class="nav-item {% if request.resolver_match.url_name == 'money_journal' %}active{% endif %}">
                     <a href="{% url 'money_journal' %}">
