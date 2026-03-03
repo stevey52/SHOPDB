@@ -45,10 +45,11 @@ class SaleForm(forms.ModelForm):
 class DebtPaymentForm(forms.ModelForm):
     class Meta:
         model = DebtPayment
-        fields = ['client', 'amount', 'notes']
+        fields = ['client', 'amount', 'date', 'notes']
         widgets = {
             'client': forms.Select(attrs={'class': 'form-select'}),
             'amount': forms.NumberInput(attrs={'class': 'form-control'}),
+            'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }
 

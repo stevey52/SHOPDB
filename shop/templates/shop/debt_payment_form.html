@@ -23,6 +23,15 @@
 
         <div style="margin-bottom: 2rem;">
             <label
+                style="display: block; margin-bottom: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7);">Date</label>
+            {{ form.date }}
+            {% if form.date.errors %}
+            <div class="text-danger" style="margin-top: 0.5rem; font-size: 0.9rem;">{{ form.date.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+            <label
                 style="display: block; margin-bottom: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7);">Payment
                 Amount (TZS)</label>
             {{ form.amount }}

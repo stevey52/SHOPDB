@@ -361,6 +361,7 @@ class DebtPaymentCreateView(LoginRequiredMixin, CreateView):
             entry_type='Income',
             amount=payment.amount,
             description=f'Debt Payment from {payment.client.name}',
+            date=payment.date,
             debt_payment=payment
         )
         messages.success(self.request, f"Payment of {payment.amount} recorded for {payment.client.name}.")
