@@ -7,9 +7,16 @@
 <div class="content-header"
     style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
     <h3 style="color: var(--text-secondary);">Stock Movements</h3>
-    <a href="{% url 'inventory_create' %}" class="btn btn-primary">
-        <i data-lucide="plus" style="vertical-align: middle; width: 18px; margin-right: 5px;"></i> Record Movement
-    </a>
+    <div style="display: flex; gap: 1rem;">
+        <a href="{% url 'bulk_restock' %}" class="btn glass"
+            style="color: white; text-decoration: none; border-color: var(--primary);">
+            <i data-lucide="package-plus" style="vertical-align: middle; width: 18px; margin-right: 5px;"></i> Bulk
+            Restock
+        </a>
+        <a href="{% url 'movement_create' %}" class="btn btn-primary">
+            <i data-lucide="plus" style="vertical-align: middle; width: 18px; margin-right: 5px;"></i> Record Movement
+        </a>
+    </div>
 </div>
 <div class="filter-section glass"
     style="padding: 1rem; margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: flex-end;">

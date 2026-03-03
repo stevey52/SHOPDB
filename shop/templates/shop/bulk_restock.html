@@ -1,0 +1,70 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}Bulk Restock - BOMBA MOTORS{% endblock %}
+{% block header_title %}Bulk Restock Inventory{% endblock %}
+
+{% block content %}
+<div class="content-section glass" style="padding: 2rem; border-radius: 12px;">
+    <form method="POST">
+        {% csrf_token %}
+
+        <div style="display: flex; gap: 1.5rem; margin-bottom: 2rem; align-items: flex-end; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 250px;">
+                <label
+                    style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">Arrival
+                    Date</label>
+                <input type="date" name="date" class="form-control" value="{{ now|date:'Y-m-d' }}">
+                <p style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.4); margin-top: 0.4rem;">Default is today.
+                </p>
+            </div>
+            <div style="flex: 2; min-width: 300px;">
+                <label
+                    style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">Shipment
+                    Reference / Delivery Note</label>
+                <input type="text" name="reference" class="form-control"
+                    placeholder="e.g. DN-102 or March Stock Arrival" required>
+            </div>
+        </div>
+
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">
+                <thead>
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                        <th style="padding: 1rem; text-align: left; color: var(--text-secondary);">Product Name</th>
+                        <th style="padding: 1rem; text-align: center; color: var(--text-secondary);">Current Stock</th>
+                        <th style="padding: 1rem; text-align: center; color: var(--primary); font-weight: 600;">Quantity
+                            Added</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <input type="hidden" name="product_ids" value="{{ product.id }}">
+                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                        <td style="padding: 1rem; font-weight: 500;">{{ product.name }}</td>
+                        <td style="padding: 1rem; text-align: center;">{{ product.current_stock }}</td>
+                        <td style="padding: 1rem; text-align: center;">
+                            <input type="number" name="qty_{{ product.id }}" class="form-control"
+                                style="width: 100px; margin: 0 auto; text-align: center;" min="0" placeholder="0">
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" style="padding: 2rem; text-align: center; color: var(--text-secondary);">No
+                            products found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1rem;">
+            <a href="{% url 'inventory_history' %}" class="btn glass"
+                style="color: white; text-decoration: none; padding: 0.8rem 1.5rem; border-radius: 8px;">Cancel</a>
+            <button type="submit" class="btn btn-primary"
+                style="padding: 0.8rem 2.5rem; border-radius: 8px; font-weight: 600;">
+                <i data-lucide="save" style="width: 18px; vertical-align: middle; margin-right: 5px;"></i> Save Restock
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

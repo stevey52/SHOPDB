@@ -427,6 +427,55 @@ class SaleUpdateView(ManagerRequiredMixin, LoginRequiredMixin, UpdateView):
         messages.success(self.request, f"Sale updated successfully.")
         return super().form_valid(form)
 
+class BulkRestockView(ManagerRequiredMixin, LoginRequiredMixin, TemplateView):
+    template_name = 'shop/bulk_restock.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['products'] = Product.objects.all().order_by('name')
+        return context
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        product_ids = request.POST.getlist('product_ids')
+        reference = request.POST.get('reference', 'Bulk Restock')
+        date_str = request.POST.get('date')
+        
+        # Determine the date for movements
+        if date_str:
+            movement_date = timezone.datetime.strptime(date_str, '%Y-%m-%d')
+            movement_date = timezone.make_aware(movement_date)
+        else:
+            movement_date = timezone.now()
+
+        updated_count = 0
+        for pid in product_ids:
+            qty_added = request.POST.get(f'qty_{pid}')
+            if qty_added and int(qty_added) > 0:
+                qty = int(qty_added)
+                product = Product.objects.get(pk=pid)
+                
+                # 1. Update stock
+                product.current_stock += qty
+                product.save()
+                
+                # 2. Record movement
+                InventoryMovement.objects.create(
+                    product=product,
+                    movement_type='IN',
+                    quantity=qty,
+                    date=movement_date,
+                    reference=reference
+                )
+                updated_count += 1
+        
+        if updated_count > 0:
+            messages.success(request, f"Successfully restocked {updated_count} products.")
+        else:
+            messages.warning(request, "No stock updates performed.")
+            
+        return redirect('inventory_history')
+
 class MovementCreateView(LoginRequiredMixin, CreateView):
     model = InventoryMovement
     form_class = MovementForm
