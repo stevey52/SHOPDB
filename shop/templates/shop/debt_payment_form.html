@@ -16,9 +16,23 @@
             {% if form.client.errors %}
             <div class="text-danger" style="margin-top: 0.5rem; font-size: 0.9rem;">{{ form.client.errors }}</div>
             {% endif %}
-            <p style="margin-top: 0.5rem; font-size: 0.85rem; color: rgba(255, 255, 255, 0.5);">
-                Only clients with outstanding debt are shown below if filtered.
-            </p>
+
+            {% if client %}
+            <div id="debt-info"
+                style="margin-top: 1rem; padding: 0.85rem 1.2rem; border-radius: 8px;
+                background: {% if client.total_debt > 0 %}rgba(239, 68, 68, 0.15); border: 1px solid rgba(239,68,68,0.4){% else %}rgba(74, 222, 128, 0.1); border: 1px solid rgba(74,222,128,0.3){% endif %};">
+                <span style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">Outstanding Balance for <strong>{{
+                        client.name }}</strong>:</span>
+                <span style="font-weight: 700; font-size: 1.1rem; margin-left: 0.75rem;
+                    color: {% if client.total_debt > 0 %}#f87171{% else %}#4ade80{% endif %};">
+                    TZS {{ client.total_debt|floatformat:2 }}
+                </span>
+                {% if client.total_debt <= 0 %} <p
+                    style="margin: 0.5rem 0 0; font-size: 0.75rem; color: rgba(255,255,255,0.4);">⚠ This client has no
+                    outstanding debt. Please verify this payment is needed.</p>
+                    {% endif %}
+            </div>
+            {% endif %}
         </div>
 
         <div style="margin-bottom: 2rem;">

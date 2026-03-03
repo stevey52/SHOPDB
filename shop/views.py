@@ -353,6 +353,16 @@ class DebtPaymentCreateView(LoginRequiredMixin, CreateView):
             initial['client'] = client_id
         return initial
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        client_id = self.request.GET.get('client')
+        if client_id:
+            try:
+                context['client'] = Client.objects.get(pk=client_id)
+            except Client.DoesNotExist:
+                pass
+        return context
+
     @transaction.atomic
     def form_valid(self, form):
         payment = form.save()
