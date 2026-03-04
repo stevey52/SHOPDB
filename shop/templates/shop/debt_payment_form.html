@@ -1,93 +1,63 @@
 {% extends 'shop/base.html' %}
-
 {% block title %}Record Payment - BOMBA MOTORS{% endblock %}
 {% block header_title %}Record Debt Payment{% endblock %}
-
 {% block content %}
 <div class="form-container glass" style="max-width: 600px; margin: 0 auto; padding: 2.5rem; border-radius: 12px;">
     <form method="POST">
         {% csrf_token %}
-
         <div style="margin-bottom: 2rem;">
-            <label
-                style="display: block; margin-bottom: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7);">Client</label>
+            <label style="display: block; margin-bottom: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7);">Client</label>
             {{ form.client }}
             {% if form.client.errors %}
             <div class="text-danger" style="margin-top: 0.5rem; font-size: 0.9rem;">{{ form.client.errors }}</div>
             {% endif %}
-
             {% if client %}
             {% if client.total_debt > 0 %}
-            <div
-                style="margin-top: 1rem; padding: 0.85rem 1.2rem; border-radius: 8px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239,68,68,0.4);">
-                <span style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">Outstanding Balance for <strong>{{
-                        client.name }}</strong>:</span>
-                <span style="font-weight: 700; font-size: 1.1rem; margin-left: 0.75rem; color: #f87171;">TZS {{
-                    client.total_debt|floatformat:2 }}</span>
+            <div style="margin-top: 1rem; padding: 0.85rem 1.2rem; border-radius: 8px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239,68,68,0.4);">
+                <span style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">Outstanding Balance for <strong>{{ client.name }}</strong>:</span>
+                <span style="font-weight: 700; font-size: 1.1rem; margin-left: 0.75rem; color: #f87171;">TZS {{ client.total_debt|floatformat:2 }}</span>
             </div>
             {% else %}
-            <div
-                style="margin-top: 1rem; padding: 0.85rem 1.2rem; border-radius: 8px; background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74,222,128,0.3);">
-                <span style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">Outstanding Balance for <strong>{{
-                        client.name }}</strong>:</span>
-                <span style="font-weight: 700; font-size: 1.1rem; margin-left: 0.75rem; color: #4ade80;">TZS {{
-                    client.total_debt|floatformat:2 }}</span>
-                <p style="margin: 0.5rem 0 0; font-size: 0.75rem; color: rgba(255,255,255,0.4);">⚠ This client has no
-                    outstanding debt. Please verify this payment is needed.</p>
+            <div style="margin-top: 1rem; padding: 0.85rem 1.2rem; border-radius: 8px; background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74,222,128,0.3);">
+                <span style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">Outstanding Balance for <strong>{{ client.name }}</strong>:</span>
+                <span style="font-weight: 700; font-size: 1.1rem; margin-left: 0.75rem; color: #4ade80;">TZS {{ client.total_debt|floatformat:2 }}</span>
+                <p style="margin: 0.5rem 0 0; font-size: 0.75rem; color: rgba(255,255,255,0.4);">This client has no outstanding debt. Please verify this payment is needed.</p>
             </div>
             {% endif %}
             {% endif %}
         </div>
-
         <div style="margin-bottom: 2rem;">
-            <label
-                style="display: block; margin-bottom: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7);">Date</label>
+            <label style="display: block; margin-bottom: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7);">Date</label>
             {{ form.date }}
             {% if form.date.errors %}
             <div class="text-danger" style="margin-top: 0.5rem; font-size: 0.9rem;">{{ form.date.errors }}</div>
             {% endif %}
         </div>
-
         <div style="margin-bottom: 2rem;">
-            <label
-                style="display: block; margin-bottom: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7);">Payment
-                Amount (TZS)</label>
+            <label style="display: block; margin-bottom: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7);">Payment Amount (TZS)</label>
             {{ form.amount }}
             {% if form.amount.errors %}
             <div class="text-danger" style="margin-top: 0.5rem; font-size: 0.9rem;">{{ form.amount.errors }}</div>
             {% endif %}
         </div>
-
         <div style="margin-bottom: 2.5rem;">
-            <label
-                style="display: block; margin-bottom: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7);">Notes
-                / Reference (Optional)</label>
+            <label style="display: block; margin-bottom: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7);">Notes / Reference (Optional)</label>
             {{ form.notes }}
             {% if form.notes.errors %}
             <div class="text-danger" style="margin-top: 0.5rem; font-size: 0.9rem;">{{ form.notes.errors }}</div>
             {% endif %}
         </div>
-
         <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-            <button type="submit" class="btn btn-primary"
-                style="flex: 1; padding: 1rem; font-weight: 600; border-radius: 8px;">
-                Record Payment
-            </button>
-            <a href="{% url 'client_list' %}" class="btn glass"
-                style="flex: 1; text-align: center; text-decoration: none; padding: 1rem; color: white; border-radius: 8px;">
-                Back to Clients
-            </a>
+            <button type="submit" class="btn btn-primary" style="flex: 1; padding: 1rem; font-weight: 600; border-radius: 8px;">Record Payment</button>
+            <a href="{% url 'client_list' %}" class="btn glass" style="flex: 1; text-align: center; text-decoration: none; padding: 1rem; color: white; border-radius: 8px;">Back to Clients</a>
         </div>
     </form>
 </div>
-
 {% if request.GET.client %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const clientSelect = document.querySelector('select[name="client"]');
-        if (clientSelect) {
-            clientSelect.value = "{{ request.GET.client }}";
-        }
+        var clientSelect = document.querySelector('select[name="client"]');
+        if (clientSelect) { clientSelect.value = "{{ request.GET.client }}"; }
     });
 </script>
 {% endif %}
