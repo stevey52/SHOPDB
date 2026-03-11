@@ -10,6 +10,7 @@ urlpatterns = [
     path('inventory/history/', views.InventoryHistoryView.as_view(), name='inventory_history'),
     path('inventory/bulk-restock/', views.BulkRestockView.as_view(), name='bulk_restock'),
     path('movement/add/', views.MovementCreateView.as_view(), name='movement_create'),
+    path('movement/<int:pk>/edit/', views.MovementUpdateView.as_view(), name='movement_update'),
     path('sales/', views.SalesHistoryView.as_view(), name='sales_history'),
     path('sales/add/', views.SaleCreateView.as_view(), name='sale_create'),
     path('sales/<int:pk>/update/', views.SaleUpdateView.as_view(), name='sale_update'),

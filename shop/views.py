@@ -492,6 +492,11 @@ class MovementCreateView(LoginRequiredMixin, CreateView):
     template_name = 'shop/movement_form.html'
     success_url = reverse_lazy('inventory_history')
 
+    def get_initial(self):
+        initial = super().get_initial()
+        initial['date'] = timezone.now().date()
+        return initial
+
     @transaction.atomic
     def form_valid(self, form):
         movement = form.save()
@@ -501,6 +506,36 @@ class MovementCreateView(LoginRequiredMixin, CreateView):
             product.current_stock += movement.quantity
         else:
             product.current_stock -= movement.quantity
+        product.save()
+        return super().form_valid(form)
+
+class MovementUpdateView(LoginRequiredMixin, UpdateView):
+    model = InventoryMovement
+    form_class = MovementForm
+    template_name = 'shop/movement_form.html'
+    success_url = reverse_lazy('inventory_history')
+
+    @transaction.atomic
+    def form_valid(self, form):
+        # Get the original movement to reverse its stock effect
+        original_movement = InventoryMovement.objects.get(pk=self.object.pk)
+        product = original_movement.product
+        
+        # Reverse the original movement's effect on stock
+        if original_movement.movement_type == 'IN':
+            product.current_stock -= original_movement.quantity
+        else:
+            product.current_stock += original_movement.quantity
+        
+        # Save the updated movement
+        movement = form.save()
+        
+        # Apply the new movement's effect on stock
+        if movement.movement_type == 'IN':
+            product.current_stock += movement.quantity
+        else:
+            product.current_stock -= movement.quantity
+            
         product.save()
         return super().form_valid(form)
 
@@ -521,6 +556,11 @@ class MoneyJournalCreateView(ManagerRequiredMixin, LoginRequiredMixin, CreateVie
     form_class = MoneyJournalForm
     template_name = 'shop/journal_form.html'
     success_url = reverse_lazy('money_journal')
+
+    def get_initial(self):
+        initial = super().get_initial()
+        initial['date'] = timezone.now().date()
+        return initial
 
 class ProfitReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
     model = Product

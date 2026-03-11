@@ -1,7 +1,7 @@
 {% extends 'shop/base.html' %}
 
-{% block title %}Stock Movement - BOMBA MOTORS{% endblock %}
-{% block header_title %}Record Stock Movement{% endblock %}
+{% block title %}{% if object %}Edit Stock Movement{% else %}Stock Movement{% endif %} - BOMBA MOTORS{% endblock %}
+{% block header_title %}{% if object %}Edit Stock Movement{% else %}Record Stock Movement{% endif %}{% endblock %}
 
 {% block content %}
 <div class="content-section glass" style="padding: 2rem; max-width: 600px; margin: 0 auto;">
@@ -30,13 +30,18 @@
                 style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border);">
         </div>
         <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Date</label>
+            <input type="date" name="date" value="{{ form.date.value|default:'' }}" class="glass"
+                style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border);">
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
             <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Reference</label>
             <input type="text" name="reference" value="{{ form.reference.value|default:'' }}" class="glass"
                 style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border);">
         </div>
 
         <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-            <button type="submit" class="btn btn-primary" style="flex: 1;">Record Movement</button>
+            <button type="submit" class="btn btn-primary" style="flex: 1;">{% if object %}Update Movement{% else %}Record Movement{% endif %}</button>
             <a href="{% url 'inventory_history' %}" class="btn glass"
                 style="flex: 1; text-align: center; text-decoration: none; color: white;">Cancel</a>
         </div>

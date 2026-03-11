@@ -62,21 +62,23 @@ class DebtPaymentForm(forms.ModelForm):
 class MovementForm(forms.ModelForm):
     class Meta:
         model = InventoryMovement
-        fields = ['product', 'movement_type', 'quantity', 'reference']
+        fields = ['product', 'movement_type', 'quantity', 'date', 'reference']
         widgets = {
             'product': forms.Select(attrs={'class': 'form-select'}),
             'movement_type': forms.Select(attrs={'class': 'form-select'}),
             'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
+            'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'reference': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
 class MoneyJournalForm(forms.ModelForm):
     class Meta:
         model = MoneyJournal
-        fields = ['entry_type', 'amount', 'category', 'description']
+        fields = ['entry_type', 'amount', 'date', 'category', 'description']
         widgets = {
             'entry_type': forms.Select(attrs={'class': 'form-select'}),
             'amount': forms.NumberInput(attrs={'class': 'form-control'}),
+            'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'category': forms.Select(attrs={'class': 'form-select'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
         }

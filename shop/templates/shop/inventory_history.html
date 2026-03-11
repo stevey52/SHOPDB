@@ -55,6 +55,7 @@
                     <th>Type</th>
                     <th>Quantity</th>
                     <th>Reference</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -71,10 +72,15 @@
                     </td>
                     <td>{{ movement.quantity }}</td>
                     <td>{{ movement.reference|default:"-" }}</td>
+                    <td>
+                        <a href="{% url 'movement_update' movement.pk %}" class="btn btn-sm btn-primary" style="padding: 0.25rem 0.5rem;">
+                            <i data-lucide="edit-2" style="width: 14px; height: 14px;"></i>
+                        </a>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" style="text-align: center; color: var(--text-secondary);">No inventory movements
+                    <td colspan="6" style="text-align: center; color: var(--text-secondary);">No inventory movements
                         recorded.</td>
                 </tr>
                 {% endfor %}
