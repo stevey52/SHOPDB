@@ -261,22 +261,33 @@ class SaleCreateView(LoginRequiredMixin, CreateView):
     @transaction.atomic
     def form_valid(self, form):
         sale = form.save()
+        
+        # Calculate FIFO cost price for this sale
+        fifo_cost_price = sale.product.get_fifo_cost_price(sale.quantity)
+        sale.cost_price = fifo_cost_price
+        sale.save()
+        
         # 1. Update Product Stock
         product = sale.product
         product.current_stock -= sale.quantity
         product.save()
 
-        # 2. Record Inventory Movement (OUT)
+        # 2. Deduct from inventory batches using FIFO
+        deductions = product.deduct_from_batches(sale.quantity)
+        
+        # 3. Record Inventory Movement (OUT) with cost price and remaining_quantity=0
         InventoryMovement.objects.create(
             product=product,
             sale=sale,
             movement_type='OUT',
             quantity=sale.quantity,
+            remaining_quantity=0,  # OUT movements have no remaining stock
             date=sale.date,
-            reference=f'Sale ID: {sale.id}'
+            reference=f'Sale ID: {sale.id}',
+            cost_price=fifo_cost_price
         )
 
-        # 3. Record Money Journal Entry (Income)
+        # 4. Record Money Journal Entry (Income)
         # For credit sales, we only record the upfront payment as income.
         amount_to_record = sale.total_price if not sale.is_credit else sale.amount_paid
         
@@ -461,21 +472,38 @@ class BulkRestockView(ManagerRequiredMixin, LoginRequiredMixin, TemplateView):
         updated_count = 0
         for pid in product_ids:
             qty_added = request.POST.get(f'qty_{pid}')
+            cost_price = request.POST.get(f'cost_price_{pid}')
+            
             if qty_added and int(qty_added) > 0:
                 qty = int(qty_added)
                 product = Product.objects.get(pk=pid)
                 
+                # Convert cost price to decimal if provided
+                cost_price_decimal = None
+                if cost_price and cost_price.strip():
+                    try:
+                        cost_price_decimal = float(cost_price)
+                    except ValueError:
+                        pass
+                
                 # 1. Update stock
                 product.current_stock += qty
+                
+                # Update product cost price if this is the first stock or if provided
+                if cost_price_decimal and (not product.cost_price or request.POST.get(f'update_cost_{pid}') == 'on'):
+                    product.cost_price = cost_price_decimal
+                
                 product.save()
                 
-                # 2. Record movement
-                InventoryMovement.objects.create(
+                # 2. Record movement with cost price and remaining quantity
+                movement = InventoryMovement.objects.create(
                     product=product,
                     movement_type='IN',
                     quantity=qty,
+                    remaining_quantity=qty,  # All stock is available initially
                     date=movement_date,
-                    reference=reference
+                    reference=reference,
+                    cost_price=cost_price_decimal
                 )
                 updated_count += 1
         
@@ -500,13 +528,23 @@ class MovementCreateView(LoginRequiredMixin, CreateView):
     @transaction.atomic
     def form_valid(self, form):
         movement = form.save()
-        # Update Product Stock
-        product = movement.product
+        
+        # Set remaining_quantity based on movement type
         if movement.movement_type == 'IN':
+            movement.remaining_quantity = movement.quantity  # All stock is available
+            # Update Product Stock
+            product = movement.product
             product.current_stock += movement.quantity
+            product.save()
         else:
-            product.current_stock -= movement.quantity
-        product.save()
+            movement.remaining_quantity = 0  # OUT movements have no remaining stock
+            # For OUT movements, deduct from available batches
+            if movement.product.current_stock >= movement.quantity:
+                movement.product.deduct_from_batches(movement.quantity)
+                movement.product.current_stock -= movement.quantity
+                movement.product.save()
+        
+        movement.save()
         return super().form_valid(form)
 
 class MovementUpdateView(LoginRequiredMixin, UpdateView):
@@ -581,17 +619,15 @@ class ProfitReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
         total_revenue_sum = 0
         total_profit_sum = 0
 
-        # Process each product to calculate profit based on current cost price
+        # Process each product to calculate profit based on actual sale cost prices
         for product in context['object_list']:
-            total_sold = product.total_sold or 0
-            # Convert Decimal to float for calculations if needed, but keeping Decimal is better for currency
-            total_revenue = product.total_revenue or 0
+            # Get all sales for this product with actual cost prices
+            sales = product.sales.all()
             
-            # Using current cost price as estimate
-            unit_cost = product.cost_price or 0
-            total_cost = total_sold * unit_cost
-            
-            net_profit = total_revenue - total_cost
+            total_sold = sum(sale.quantity for sale in sales)
+            total_revenue = sum(sale.total_price for sale in sales)
+            total_cost = sum(sale.total_cost for sale in sales)
+            net_profit = sum(sale.profit for sale in sales)
             
             if total_revenue > 0:
                 margin = (net_profit / total_revenue) * 100

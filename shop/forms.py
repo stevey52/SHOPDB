@@ -62,12 +62,13 @@ class DebtPaymentForm(forms.ModelForm):
 class MovementForm(forms.ModelForm):
     class Meta:
         model = InventoryMovement
-        fields = ['product', 'movement_type', 'quantity', 'date', 'reference']
+        fields = ['product', 'movement_type', 'quantity', 'date', 'cost_price', 'reference']
         widgets = {
             'product': forms.Select(attrs={'class': 'form-select'}),
             'movement_type': forms.Select(attrs={'class': 'form-select'}),
             'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
             'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'cost_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': 'Cost price per unit'}),
             'reference': forms.TextInput(attrs={'class': 'form-control'}),
         }
 

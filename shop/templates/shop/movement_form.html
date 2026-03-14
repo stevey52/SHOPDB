@@ -30,6 +30,12 @@
                 style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border);">
         </div>
         <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Cost Price (TZS)</label>
+            <input type="number" name="cost_price" value="{{ form.cost_price.value|default:'' }}" class="glass"
+                style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border);" 
+                step="0.01" min="0" placeholder="Cost price per unit">
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
             <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Date</label>
             <input type="date" name="date" value="{{ form.date.value|default:'' }}" class="glass"
                 style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border);">
