@@ -709,7 +709,19 @@ class SalesReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
         
         cash_revenue = sum(sale.total_price for sale in cash_sales)
         credit_revenue = sum(sale.total_price for sale in credit_sales)
-        outstanding_credit = sum(sale.balance_due for sale in credit_sales)
+        
+        # Calculate outstanding credit same as dashboard total_debt
+        total_unpaid = sum(s.total_price - s.amount_paid for s in credit_sales)
+        
+        # Fix: Calculate debt payments per client to avoid double-counting
+        debt_payments_total = 0
+        unique_clients = set()
+        for sale in credit_sales:
+            if sale.client not in unique_clients:
+                debt_payments_total += sum(p.amount for p in sale.client.debt_payments.all())
+                unique_clients.add(sale.client)
+        
+        outstanding_credit = total_unpaid - debt_payments_total
         
         # Get filter values for form
         start_date = self.request.GET.get('start_date', '')

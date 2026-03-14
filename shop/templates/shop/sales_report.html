@@ -73,7 +73,12 @@
     </div>
     <div class="stat-card glass">
         <div class="stat-label">Outstanding Credit</div>
-        <div class="stat-value text-danger">TZS {{ outstanding_credit|floatformat:2|intcomma }}</div>
+        <div class="stat-value {% if outstanding_credit > 0 %}text-danger{% else %}text-warning{% endif %}">
+            TZS {{ outstanding_credit|floatformat:2|intcomma }}
+            {% if outstanding_credit == 0 %}
+                <span style="font-size: 0.8rem; color: var(--text-secondary);">(All Paid)</span>
+            {% endif %}
+        </div>
     </div>
 </div>
 
