@@ -61,6 +61,16 @@
                         <i data-lucide="trending-up"></i> Profit Report
                     </a>
                 </li>
+                <li class="nav-item {% if request.resolver_match.url_name == 'sales_report' %}active{% endif %}">
+                    <a href="{% url 'sales_report' %}">
+                        <i data-lucide="file-text"></i> Sales Report
+                    </a>
+                </li>
+                <li class="nav-item {% if request.resolver_match.url_name == 'expenses_report' %}active{% endif %}">
+                    <a href="{% url 'expenses_report' %}">
+                        <i data-lucide="receipt"></i> Expenses Report
+                    </a>
+                </li>
                 {% endif %}
                 <li class="nav-item {% if request.resolver_match.url_name == 'low_stock' %}active{% endif %}">
                     <a href="{% url 'low_stock' %}">

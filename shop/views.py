@@ -657,7 +657,142 @@ class ProfitReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib import messages
 from django.views.decorators.http import require_POST
+from django.db.models import Sum, F, Avg
+from django.http import JsonResponse
+import json
 from django.contrib.auth.decorators import login_required
+
+class SalesReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
+    model = Sale
+    template_name = 'shop/sales_report.html'
+    context_object_name = 'sales'
+    paginate_by = 50
+
+    def get_queryset(self):
+        queryset = Sale.objects.select_related('product', 'client').order_by('-date')
+        
+        # Apply date filters
+        start_date = self.request.GET.get('start_date')
+        end_date = self.request.GET.get('end_date')
+        
+        if start_date:
+            try:
+                start_date = timezone.datetime.strptime(start_date, '%Y-%m-%d')
+                start_date = timezone.make_aware(start_date)
+                queryset = queryset.filter(date__gte=start_date)
+            except ValueError:
+                pass
+        
+        if end_date:
+            try:
+                end_date = timezone.datetime.strptime(end_date, '%Y-%m-%d')
+                end_date = timezone.make_aware(end_date.replace(hour=23, minute=59, second=59))
+                queryset = queryset.filter(date__lte=end_date)
+            except ValueError:
+                pass
+        
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get the full queryset for statistics (before pagination)
+        queryset = self.get_queryset()
+        
+        # Calculate summary statistics
+        total_revenue = sum(sale.total_price for sale in queryset)
+        total_cost = sum(sale.total_cost for sale in queryset if sale.total_cost)
+        total_profit = sum(sale.profit for sale in queryset if sale.profit)
+        
+        cash_sales = queryset.filter(is_credit=False)
+        credit_sales = queryset.filter(is_credit=True)
+        
+        cash_revenue = sum(sale.total_price for sale in cash_sales)
+        credit_revenue = sum(sale.total_price for sale in credit_sales)
+        outstanding_credit = sum(sale.balance_due for sale in credit_sales)
+        
+        # Get filter values for form
+        start_date = self.request.GET.get('start_date', '')
+        end_date = self.request.GET.get('end_date', '')
+        
+        context.update({
+            'total_revenue': total_revenue,
+            'total_cost': total_cost,
+            'total_profit': total_profit,
+            'cash_revenue': cash_revenue,
+            'credit_revenue': credit_revenue,
+            'outstanding_credit': outstanding_credit,
+            'total_sales': len(queryset),
+            'cash_sales_count': len(cash_sales),
+            'credit_sales_count': len(credit_sales),
+            'start_date': start_date,
+            'end_date': end_date,
+        })
+        
+        return context
+
+class ExpensesReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
+    model = MoneyJournal
+    template_name = 'shop/expenses_report.html'
+    context_object_name = 'expenses'
+    paginate_by = 50
+
+    def get_queryset(self):
+        queryset = MoneyJournal.objects.filter(entry_type='Expense').select_related('category').order_by('-date')
+        
+        # Apply date filters
+        start_date = self.request.GET.get('start_date')
+        end_date = self.request.GET.get('end_date')
+        
+        if start_date:
+            try:
+                start_date = timezone.datetime.strptime(start_date, '%Y-%m-%d')
+                start_date = timezone.make_aware(start_date)
+                queryset = queryset.filter(date__gte=start_date)
+            except ValueError:
+                pass
+        
+        if end_date:
+            try:
+                end_date = timezone.datetime.strptime(end_date, '%Y-%m-%d')
+                end_date = timezone.make_aware(end_date.replace(hour=23, minute=59, second=59))
+                queryset = queryset.filter(date__lte=end_date)
+            except ValueError:
+                pass
+        
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get the full queryset for statistics (before pagination)
+        queryset = self.get_queryset()
+        
+        # Calculate summary statistics
+        total_expenses = sum(expense.amount for expense in queryset)
+        
+        # Group by category
+        category_totals = {}
+        for expense in queryset:
+            category_name = expense.category.name if expense.category else 'Uncategorized'
+            if category_name not in category_totals:
+                category_totals[category_name] = 0
+            category_totals[category_name] += expense.amount
+        
+        # Get filter values for form
+        start_date = self.request.GET.get('start_date', '')
+        end_date = self.request.GET.get('end_date', '')
+        
+        context.update({
+            'total_expenses': total_expenses,
+            'category_totals': category_totals,
+            'expense_count': len(queryset),
+            'average_expense': total_expenses / len(queryset) if len(queryset) > 0 else 0,
+            'start_date': start_date,
+            'end_date': end_date,
+        })
+        
+        return context
 
 class MoneyJournalDeleteView(ManagerRequiredMixin, LoginRequiredMixin, DeleteView):
     model = MoneyJournal

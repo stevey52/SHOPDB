@@ -26,6 +26,16 @@
                 style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border);">
         </div>
         <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Category</label>
+            <select name="category" class="glass"
+                style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border); background: var(--glass-bg);">
+                <option value="" style="color: black;">-- Select Category --</option>
+                {% for category in form.category.field.queryset %}
+                <option value="{{ category.id }}" style="color: black;" {% if form.category.value == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
             <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Description</label>
             <textarea name="description" class="glass"
                 style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border); min-height: 100px;">{{ form.description.value|default:'' }}</textarea>
