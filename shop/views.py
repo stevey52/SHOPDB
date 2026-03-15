@@ -48,9 +48,14 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             sales_data.append(float(daily_sales))
             
             # Daily COGS - use actual sale cost_price (FIFO) instead of current product cost_price
-            daily_cogs = Sale.objects.filter(date__date=date).aggregate(
-                total=Sum('cost_price')
-            )['total'] or 0
+            daily_cogs = 0
+            daily_sales_queryset = Sale.objects.filter(date__date=date)
+            for sale in daily_sales_queryset:
+                if sale.cost_price:
+                    daily_cogs += sale.cost_price
+                else:
+                    # Fallback to current product cost_price if sale cost_price is null
+                    daily_cogs += sale.quantity * sale.product.cost_price
             
             # Manual Expenses for the day
             daily_expenses = MoneyJournal.objects.filter(entry_type='Expense', date__date=date).aggregate(
@@ -604,16 +609,35 @@ class ProfitReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
     model = Product
     template_name = 'shop/profit_report.html'
     ordering = ['name']
+    paginate_by = 20
     
     def get_queryset(self):
-        # Annotate with total quantity sold and total revenue
-        return Product.objects.annotate(
-            total_sold=Sum('sales__quantity'),
-            total_revenue=Sum(F('sales__quantity') * F('sales__price_at_sale'))
-        ).filter(total_sold__gt=0) # Only show products that have sold
+        # Get date filters
+        start_date = self.request.GET.get('start_date')
+        end_date = self.request.GET.get('end_date')
+        
+        # Start with all products
+        queryset = Product.objects.all()
+        
+        # Filter sales by date range if provided
+        sales_filter = Sale.objects.all()
+        if start_date:
+            sales_filter = sales_filter.filter(date__gte=start_date)
+        if end_date:
+            sales_filter = sales_filter.filter(date__lte=end_date)
+        
+        # Annotate with filtered sales data
+        return queryset.annotate(
+            total_sold=Sum('sales__quantity', filter=Q(sales__in=sales_filter)),
+            total_revenue=Sum(F('sales__quantity') * F('sales__price_at_sale'), filter=Q(sales__in=sales_filter))
+        ).filter(total_sold__gt=0) # Only show products that have sold in the period
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
+        # Get date filters
+        start_date = self.request.GET.get('start_date')
+        end_date = self.request.GET.get('end_date')
         
         products_data = []
         total_revenue_sum = 0
@@ -621,8 +645,12 @@ class ProfitReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
 
         # Process each product to calculate profit based on actual sale cost prices
         for product in context['object_list']:
-            # Get all sales for this product with actual cost prices
+            # Get filtered sales for this product
             sales = product.sales.all()
+            if start_date:
+                sales = sales.filter(date__gte=start_date)
+            if end_date:
+                sales = sales.filter(date__lte=end_date)
             
             total_sold = sum(sale.quantity for sale in sales)
             total_revenue = sum(sale.total_price for sale in sales)
@@ -652,6 +680,8 @@ class ProfitReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
         context['report_data'] = products_data
         context['total_revenue_sum'] = total_revenue_sum
         context['total_profit_sum'] = total_profit_sum
+        context['start_date'] = start_date or ''
+        context['end_date'] = end_date or ''
         return context
 
 from django.shortcuts import get_object_or_404, redirect

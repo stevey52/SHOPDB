@@ -4,6 +4,26 @@
 {% block header_title %}Profitability Report{% endblock %}
 
 {% block content %}
+<!-- Date Filter Form -->
+<div class="content-section glass" style="padding: 1.5rem; margin-bottom: 2rem;">
+    <form method="get" style="display: flex; gap: 1rem; align-items: end; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 150px;">
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">Start Date</label>
+            <input type="date" name="start_date" value="{{ start_date }}" class="glass"
+                style="width: 100%; padding: 0.5rem; color: white; border-color: var(--glass-border);">
+        </div>
+        <div style="flex: 1; min-width: 150px;">
+            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">End Date</label>
+            <input type="date" name="end_date" value="{{ end_date }}" class="glass"
+                style="width: 100%; padding: 0.5rem; color: white; border-color: var(--glass-border);">
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="{% url 'profit_report' %}" class="btn glass" style="text-decoration: none; color: white;">Clear</a>
+        </div>
+    </form>
+</div>
+
 <div class="content-header"
     style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
     <h3 style="color: var(--text-secondary);">Product Performance</h3>
@@ -58,4 +78,29 @@
         </table>
     </div>
 </div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<div style="display: flex; justify-content: center; margin-top: 2rem;">
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+        {% if page_obj.has_previous %}
+            <a href="?page=1{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" 
+               class="btn glass" style="text-decoration: none; color: white; padding: 0.5rem 1rem;">&laquo; First</a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" 
+               class="btn glass" style="text-decoration: none; color: white; padding: 0.5rem 1rem;">&lsaquo; Previous</a>
+        {% endif %}
+        
+        <span style="color: var(--text-secondary); padding: 0 1rem;">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+        
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" 
+               class="btn glass" style="text-decoration: none; color: white; padding: 0.5rem 1rem;">Next &rsaquo;</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" 
+               class="btn glass" style="text-decoration: none; color: white; padding: 0.5rem 1rem;">Last &raquo;</a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
 {% endblock %}
