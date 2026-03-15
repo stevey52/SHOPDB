@@ -47,9 +47,9 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             )['total'] or 0
             sales_data.append(float(daily_sales))
             
-            # Daily COGS
+            # Daily COGS - use actual sale cost_price (FIFO) instead of current product cost_price
             daily_cogs = Sale.objects.filter(date__date=date).aggregate(
-                total=Sum(F('quantity') * F('product__cost_price'))
+                total=Sum('cost_price')
             )['total'] or 0
             
             # Manual Expenses for the day
