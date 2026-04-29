@@ -16,6 +16,9 @@
 
 <body>
     <div class="app-container">
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
         <!-- Sidebar -->
         <aside class="sidebar glass">
             <div class="logo">
@@ -97,7 +100,12 @@
         <!-- Main Content -->
         <main class="main-content">
             <header class="header">
-                <h2>{% block header_title %}Dashbard{% endblock %}</h2>
+                <div class="header-left">
+                    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                        <i data-lucide="menu"></i>
+                    </button>
+                    <h2>{% block header_title %}Dashbard{% endblock %}</h2>
+                </div>
                 <div class="user-info">
                     <span>{{ user.username }}</span>
                 </div>
@@ -119,6 +127,10 @@
 
     <script>
         lucide.createIcons();
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
     </script>
     {% block extra_js %}{% endblock %}
 </body>
