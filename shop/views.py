@@ -1,15 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import views as auth_views
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, FormView
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, FormView, View
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
-from django.db.models import Sum, F, Q
+from django.db.models import Sum, F, Q, Prefetch
 from django.utils import timezone
 from django.contrib import messages
+from django.http import HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
 from .models import Product, InventoryMovement, Sale, MoneyJournal, ExpenseCategory, Client, DebtPayment
 from .forms import SaleForm, MovementForm, MoneyJournalForm, ClientForm, DebtPaymentForm
-from .mixins import ManagerRequiredMixin
+from .mixins import ManagerRequiredMixin, DateFilterMixin
 
 class MyLogoutView(auth_views.LogoutView):
     def get(self, request, *args, **kwargs):
@@ -49,7 +52,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             
             # Daily COGS - use actual sale cost_price (FIFO) instead of current product cost_price
             daily_cogs = 0
-            daily_sales_queryset = Sale.objects.filter(date__date=date)
+            daily_sales_queryset = Sale.objects.filter(date__date=date).select_related('product')
             for sale in daily_sales_queryset:
                 if sale.cost_price:
                     daily_cogs += sale.cost_price
@@ -119,7 +122,7 @@ class ClientListView(LoginRequiredMixin, ListView):
     ordering = ['name']
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().prefetch_related('sales', 'debt_payments')
         query = self.request.GET.get('q')
         if query:
             queryset = queryset.filter(name__icontains=query)
@@ -147,7 +150,7 @@ class ClientCreateView(LoginRequiredMixin, CreateView):
     template_name = 'shop/client_form.html'
     success_url = reverse_lazy('client_list')
 
-class InventoryHistoryView(LoginRequiredMixin, ListView):
+class InventoryHistoryView(LoginRequiredMixin, DateFilterMixin, ListView):
     model = InventoryMovement
     template_name = 'shop/inventory_history.html'
     context_object_name = 'movements'
@@ -155,13 +158,8 @@ class InventoryHistoryView(LoginRequiredMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        start_date = self.request.GET.get('start_date')
-        end_date = self.request.GET.get('end_date')
-        if start_date:
-            queryset = queryset.filter(date__date__gte=start_date)
-        if end_date:
-            queryset = queryset.filter(date__date__lte=end_date)
+        queryset = super().get_queryset().select_related('product', 'sale')
+        queryset = self.apply_date_filters(queryset)
             
         query = self.request.GET.get('q')
         if query:
@@ -178,7 +176,7 @@ class InventoryHistoryView(LoginRequiredMixin, ListView):
         context['search_query'] = self.request.GET.get('q', '')
         return context
 
-class SalesHistoryView(LoginRequiredMixin, ListView):
+class SalesHistoryView(LoginRequiredMixin, DateFilterMixin, ListView):
     model = Sale
     template_name = 'shop/sales_history.html'
     context_object_name = 'sales'
@@ -186,13 +184,8 @@ class SalesHistoryView(LoginRequiredMixin, ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        start_date = self.request.GET.get('start_date')
-        end_date = self.request.GET.get('end_date')
-        if start_date:
-            queryset = queryset.filter(date__date__gte=start_date)
-        if end_date:
-            queryset = queryset.filter(date__date__lte=end_date)
+        queryset = super().get_queryset().select_related('product', 'client')
+        queryset = self.apply_date_filters(queryset)
             
         query = self.request.GET.get('q')
         if query:
@@ -209,7 +202,7 @@ class SalesHistoryView(LoginRequiredMixin, ListView):
         context['search_query'] = self.request.GET.get('q', '')
         return context
 
-class MoneyJournalView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
+class MoneyJournalView(ManagerRequiredMixin, LoginRequiredMixin, DateFilterMixin, ListView):
     model = MoneyJournal
     template_name = 'shop/money_journal.html'
     context_object_name = 'entries'
@@ -218,12 +211,7 @@ class MoneyJournalView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        start_date = self.request.GET.get('start_date')
-        end_date = self.request.GET.get('end_date')
-        if start_date:
-            queryset = queryset.filter(date__date__gte=start_date)
-        if end_date:
-            queryset = queryset.filter(date__date__lte=end_date)
+        queryset = self.apply_date_filters(queryset)
             
         category_id = self.request.GET.get('category')
         if category_id:
@@ -616,15 +604,27 @@ class ProfitReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
         start_date = self.request.GET.get('start_date')
         end_date = self.request.GET.get('end_date')
         
-        # Start with all products
-        queryset = Product.objects.all()
-        
         # Filter sales by date range if provided
         sales_filter = Sale.objects.all()
         if start_date:
-            sales_filter = sales_filter.filter(date__gte=start_date)
+            try:
+                start_dt = timezone.datetime.strptime(start_date, '%Y-%m-%d')
+                start_dt = timezone.make_aware(start_dt)
+                sales_filter = sales_filter.filter(date__gte=start_dt)
+            except ValueError:
+                pass
         if end_date:
-            sales_filter = sales_filter.filter(date__lte=end_date)
+            try:
+                end_dt = timezone.datetime.strptime(end_date, '%Y-%m-%d')
+                end_dt = timezone.make_aware(end_dt.replace(hour=23, minute=59, second=59))
+                sales_filter = sales_filter.filter(date__lte=end_dt)
+            except ValueError:
+                pass
+        
+        # Start with all products
+        queryset = Product.objects.prefetch_related(
+            Prefetch('sales', queryset=sales_filter, to_attr='filtered_sales')
+        )
         
         # Annotate with filtered sales data
         return queryset.annotate(
@@ -645,12 +645,8 @@ class ProfitReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
 
         # Process each product to calculate profit based on actual sale cost prices
         for product in context['object_list']:
-            # Get filtered sales for this product
-            sales = product.sales.all()
-            if start_date:
-                sales = sales.filter(date__gte=start_date)
-            if end_date:
-                sales = sales.filter(date__lte=end_date)
+            # Get filtered sales for this product (prefetched)
+            sales = product.filtered_sales
             
             total_sold = sum(sale.quantity for sale in sales)
             total_revenue = sum(sale.total_price for sale in sales)
@@ -692,7 +688,7 @@ from django.http import JsonResponse
 import json
 from django.contrib.auth.decorators import login_required
 
-class SalesReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
+class SalesReportView(ManagerRequiredMixin, LoginRequiredMixin, DateFilterMixin, ListView):
     model = Sale
     template_name = 'shop/sales_report.html'
     context_object_name = 'sales'
@@ -700,28 +696,7 @@ class SalesReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = Sale.objects.select_related('product', 'client').order_by('-date')
-        
-        # Apply date filters
-        start_date = self.request.GET.get('start_date')
-        end_date = self.request.GET.get('end_date')
-        
-        if start_date:
-            try:
-                start_date = timezone.datetime.strptime(start_date, '%Y-%m-%d')
-                start_date = timezone.make_aware(start_date)
-                queryset = queryset.filter(date__gte=start_date)
-            except ValueError:
-                pass
-        
-        if end_date:
-            try:
-                end_date = timezone.datetime.strptime(end_date, '%Y-%m-%d')
-                end_date = timezone.make_aware(end_date.replace(hour=23, minute=59, second=59))
-                queryset = queryset.filter(date__lte=end_date)
-            except ValueError:
-                pass
-        
-        return queryset
+        return self.apply_date_filters(queryset)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -773,7 +748,7 @@ class SalesReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
         
         return context
 
-class ExpensesReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
+class ExpensesReportView(ManagerRequiredMixin, LoginRequiredMixin, DateFilterMixin, ListView):
     model = MoneyJournal
     template_name = 'shop/expenses_report.html'
     context_object_name = 'expenses'
@@ -781,28 +756,7 @@ class ExpensesReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = MoneyJournal.objects.filter(entry_type='Expense').select_related('category').order_by('-date')
-        
-        # Apply date filters
-        start_date = self.request.GET.get('start_date')
-        end_date = self.request.GET.get('end_date')
-        
-        if start_date:
-            try:
-                start_date = timezone.datetime.strptime(start_date, '%Y-%m-%d')
-                start_date = timezone.make_aware(start_date)
-                queryset = queryset.filter(date__gte=start_date)
-            except ValueError:
-                pass
-        
-        if end_date:
-            try:
-                end_date = timezone.datetime.strptime(end_date, '%Y-%m-%d')
-                end_date = timezone.make_aware(end_date.replace(hour=23, minute=59, second=59))
-                queryset = queryset.filter(date__lte=end_date)
-            except ValueError:
-                pass
-        
-        return queryset
+        return self.apply_date_filters(queryset)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -844,6 +798,25 @@ class MoneyJournalDeleteView(ManagerRequiredMixin, LoginRequiredMixin, DeleteVie
     def form_valid(self, form):
         messages.success(self.request, "Journal entry deleted successfully.")
         return super().form_valid(form)
+
+class ReceiptPDFView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        sale = get_object_or_404(Sale, pk=pk)
+        template = get_template('shop/receipt_pdf.html')
+        context = {
+            'sale': sale,
+            'current_date': timezone.now(),
+        }
+        html = template.render(context)
+        response = HttpResponse(content_type='application/pdf')
+        # inline displays in browser, attachment downloads
+        response['Content-Disposition'] = f'inline; filename="receipt_{sale.id}.pdf"'
+        
+        pisa_status = pisa.CreatePDF(html, dest=response)
+        
+        if pisa_status.err:
+            return HttpResponse('We had some errors <pre>' + html + '</pre>')
+        return response
 
 @login_required
 @require_POST

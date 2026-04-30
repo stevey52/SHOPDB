@@ -60,8 +60,13 @@
                     <td>TZS {{ sale.price_at_sale }}</td>
                     <td style="font-weight: 600; color: var(--success);">TZS {{ sale.total_price }}</td>
                     <td>
-                        {% if is_manager %}
                         <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                            <a href="{% url 'receipt_pdf' sale.pk %}" class="btn glass"
+                                style="padding: 0.3rem 0.6rem; border-radius: 6px; color: var(--accent-color);"
+                                title="Download Receipt" target="_blank">
+                                <i data-lucide="file-text" style="width: 14px;"></i>
+                            </a>
+                            {% if is_manager %}
                             <a href="{% url 'sale_update' sale.pk %}" class="btn glass"
                                 style="padding: 0.3rem 0.6rem; border-radius: 6px; color: var(--primary);"
                                 title="Edit Sale">
@@ -72,8 +77,8 @@
                                 title="Delete Sale">
                                 <i data-lucide="trash-2" style="width: 14px;"></i>
                             </a>
+                            {% endif %}
                         </div>
-                        {% endif %}
                     </td>
                 </tr>
                 {% empty %}

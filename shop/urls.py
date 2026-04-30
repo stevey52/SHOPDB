@@ -15,6 +15,7 @@ urlpatterns = [
     path('sales/add/', views.SaleCreateView.as_view(), name='sale_create'),
     path('sales/<int:pk>/update/', views.SaleUpdateView.as_view(), name='sale_update'),
     path('sales/<int:pk>/delete/', views.SaleDeleteView.as_view(), name='sale_delete'),
+    path('sales/<int:pk>/receipt/', views.ReceiptPDFView.as_view(), name='receipt_pdf'),
     path('money/', views.MoneyJournalView.as_view(), name='money_journal'),
     path('money/add/', views.MoneyJournalCreateView.as_view(), name='money_create'),
     path('money/<int:pk>/delete/', views.MoneyJournalDeleteView.as_view(), name='money_delete'),

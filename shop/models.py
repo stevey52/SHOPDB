@@ -7,6 +7,9 @@ class Product(models.Model):
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     cost_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
+    class Meta:
+        ordering = ['name']
+
     def __str__(self):
         return self.name
 
@@ -95,13 +98,16 @@ class Client(models.Model):
     address = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(default=timezone.now)
 
+    class Meta:
+        ordering = ['name']
+
     def __str__(self):
         return self.name
 
     @property
     def total_debt(self):
         # Calculate total debt: Sum of (total_price - amount_paid) for credit sales - sum of payments
-        credit_sales = self.sales.filter(is_credit=True)
+        credit_sales = [s for s in self.sales.all() if s.is_credit]
         unpaid_amount = sum(s.total_price - s.amount_paid for s in credit_sales)
         payments_total = sum(p.amount for p in self.debt_payments.all())
         return unpaid_amount - payments_total

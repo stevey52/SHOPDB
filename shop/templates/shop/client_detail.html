@@ -76,6 +76,11 @@
                             {% else %}
                             <span style="font-size: 0.75rem; color: rgba(255, 255, 255, 0.4);">Cash</span>
                             {% endif %}
+                            <a href="{% url 'receipt_pdf' sale.pk %}" class="btn glass"
+                                style="padding: 0.2rem 0.5rem; border-radius: 6px; color: var(--accent-color); margin-left: 0.5rem;"
+                                title="Download Receipt" target="_blank">
+                                <i data-lucide="file-text" style="width: 14px;"></i>
+                            </a>
                         </td>
                     </tr>
                     {% empty %}
