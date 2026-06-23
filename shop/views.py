@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
-from .models import Product, InventoryMovement, Sale, MoneyJournal, ExpenseCategory, Client, DebtPayment
+from .models import Product, InventoryMovement, Sale, MoneyJournal, ExpenseCategory, Client, DebtPayment, Invoice, SaleItem
 from .forms import SaleForm, MovementForm, MoneyJournalForm, ClientForm, DebtPaymentForm
 from .mixins import ManagerRequiredMixin, DateFilterMixin
 
@@ -48,7 +48,13 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             daily_sales = Sale.objects.filter(date__date=date).aggregate(
                 total=Sum(F('quantity') * F('price_at_sale'))
             )['total'] or 0
-            sales_data.append(float(daily_sales))
+            
+            daily_invoice_sales = SaleItem.objects.filter(invoice__date__date=date).aggregate(
+                total=Sum(F('quantity') * F('price_at_sale'))
+            )['total'] or 0
+            
+            daily_sales_total = float(daily_sales) + float(daily_invoice_sales)
+            sales_data.append(daily_sales_total)
             
             # Daily COGS - use actual sale cost_price (FIFO) instead of current product cost_price
             daily_cogs = 0
@@ -59,6 +65,13 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 else:
                     # Fallback to current product cost_price if sale cost_price is null
                     daily_cogs += sale.quantity * sale.product.cost_price
+                    
+            daily_invoice_sales_queryset = SaleItem.objects.filter(invoice__date__date=date).select_related('product')
+            for item in daily_invoice_sales_queryset:
+                if item.cost_price:
+                    daily_cogs += item.cost_price
+                else:
+                    daily_cogs += item.quantity * item.product.cost_price
             
             # Manual Expenses for the day
             daily_expenses = MoneyJournal.objects.filter(entry_type='Expense', date__date=date).aggregate(
@@ -68,7 +81,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             
             # Profit = Total Sales Value - COGS - Expenses (Accrual)
             # This ensures that credit sales don't look like losses because of COGS.
-            daily_profit = float(daily_sales) - float(daily_cogs) - float(daily_expenses)
+            daily_profit = daily_sales_total - float(daily_cogs) - float(daily_expenses)
             profit_data.append(round(daily_profit, 2))
 
         context['chart_labels'] = days
@@ -142,6 +155,7 @@ class ClientDetailView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['client'] = self.client
         context['payments'] = DebtPayment.objects.filter(client=self.client).order_by('-date')
+        context['invoices'] = Invoice.objects.filter(client=self.client).order_by('-date')
         return context
 
 class ClientCreateView(LoginRequiredMixin, CreateView):
@@ -606,11 +620,13 @@ class ProfitReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
         
         # Filter sales by date range if provided
         sales_filter = Sale.objects.all()
+        items_filter = SaleItem.objects.all()
         if start_date:
             try:
                 start_dt = timezone.datetime.strptime(start_date, '%Y-%m-%d')
                 start_dt = timezone.make_aware(start_dt)
                 sales_filter = sales_filter.filter(date__gte=start_dt)
+                items_filter = items_filter.filter(invoice__date__gte=start_dt)
             except ValueError:
                 pass
         if end_date:
@@ -618,19 +634,16 @@ class ProfitReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
                 end_dt = timezone.datetime.strptime(end_date, '%Y-%m-%d')
                 end_dt = timezone.make_aware(end_dt.replace(hour=23, minute=59, second=59))
                 sales_filter = sales_filter.filter(date__lte=end_dt)
+                items_filter = items_filter.filter(invoice__date__lte=end_dt)
             except ValueError:
                 pass
         
         # Start with all products
         queryset = Product.objects.prefetch_related(
-            Prefetch('sales', queryset=sales_filter, to_attr='filtered_sales')
+            Prefetch('sales', queryset=sales_filter, to_attr='filtered_sales'),
+            Prefetch('sale_items', queryset=items_filter, to_attr='filtered_invoice_items')
         )
-        
-        # Annotate with filtered sales data
-        return queryset.annotate(
-            total_sold=Sum('sales__quantity', filter=Q(sales__in=sales_filter)),
-            total_revenue=Sum(F('sales__quantity') * F('sales__price_at_sale'), filter=Q(sales__in=sales_filter))
-        ).filter(total_sold__gt=0) # Only show products that have sold in the period
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -647,11 +660,16 @@ class ProfitReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
         for product in context['object_list']:
             # Get filtered sales for this product (prefetched)
             sales = product.filtered_sales
+            invoice_items = product.filtered_invoice_items
             
-            total_sold = sum(sale.quantity for sale in sales)
-            total_revenue = sum(sale.total_price for sale in sales)
-            total_cost = sum(sale.total_cost for sale in sales)
-            net_profit = sum(sale.profit for sale in sales)
+            total_sold = sum(sale.quantity for sale in sales) + sum(item.quantity for item in invoice_items)
+            
+            if total_sold == 0:
+                continue
+                
+            total_revenue = sum(sale.total_price for sale in sales) + sum(item.total_price for item in invoice_items)
+            total_cost = sum(sale.total_cost for sale in sales) + sum(item.total_cost for item in invoice_items)
+            net_profit = sum(sale.profit for sale in sales if hasattr(sale, 'profit') and sale.profit) + sum(item.profit for item in invoice_items if hasattr(item, 'profit') and item.profit)
             
             if total_revenue > 0:
                 margin = (net_profit / total_revenue) * 100
@@ -695,8 +713,21 @@ class SalesReportView(ManagerRequiredMixin, LoginRequiredMixin, DateFilterMixin,
     paginate_by = 50
 
     def get_queryset(self):
-        queryset = Sale.objects.select_related('product', 'client').order_by('-date')
-        return self.apply_date_filters(queryset)
+        # 1. Get filtered sales
+        sales_qs = Sale.objects.select_related('product', 'client')
+        sales_qs = self.apply_date_filters(sales_qs)
+        
+        # 2. Get filtered invoice items
+        items_qs = SaleItem.objects.select_related('product', 'invoice', 'invoice__client')
+        original_date_field = getattr(self, 'date_field', 'date')
+        self.date_field = 'invoice__date'
+        items_qs = self.apply_date_filters(items_qs)
+        self.date_field = original_date_field
+        
+        # 3. Combine and sort
+        combined = list(sales_qs) + list(items_qs)
+        combined.sort(key=lambda x: x.date, reverse=True)
+        return combined
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -707,22 +738,28 @@ class SalesReportView(ManagerRequiredMixin, LoginRequiredMixin, DateFilterMixin,
         # Calculate summary statistics
         total_revenue = sum(sale.total_price for sale in queryset)
         total_cost = sum(sale.total_cost for sale in queryset if sale.total_cost)
-        total_profit = sum(sale.profit for sale in queryset if sale.profit)
+        total_profit = sum(sale.profit for sale in queryset if hasattr(sale, 'profit') and sale.profit)
         
-        cash_sales = queryset.filter(is_credit=False)
-        credit_sales = queryset.filter(is_credit=True)
+        cash_sales = [s for s in queryset if not s.is_credit]
+        credit_sales = [s for s in queryset if s.is_credit]
         
         cash_revenue = sum(sale.total_price for sale in cash_sales)
         credit_revenue = sum(sale.total_price for sale in credit_sales)
         
-        # Calculate outstanding credit same as dashboard total_debt
-        total_unpaid = sum(s.total_price - s.amount_paid for s in credit_sales)
+        # Calculate outstanding credit
+        # Since SaleItem amount_paid is 0 and we don't want to double count invoice payments,
+        # we calculate total unpaid by summing over Sales and unique Invoices.
+        sales_only_credit = [s for s in credit_sales if isinstance(s, Sale)]
+        total_unpaid = sum(s.total_price - s.amount_paid for s in sales_only_credit)
         
-        # Fix: Calculate debt payments per client to avoid double-counting
+        unique_credit_invoices = set(item.invoice for item in credit_sales if hasattr(item, 'invoice'))
+        total_unpaid += sum(inv.total_price - inv.amount_paid for inv in unique_credit_invoices)
+        
+        # Calculate debt payments per client to avoid double-counting
         debt_payments_total = 0
         unique_clients = set()
         for sale in credit_sales:
-            if sale.client not in unique_clients:
+            if sale.client and sale.client not in unique_clients:
                 debt_payments_total += sum(p.amount for p in sale.client.debt_payments.all())
                 unique_clients.add(sale.client)
         
@@ -848,3 +885,149 @@ def quick_stock_update(request, pk):
             
     product.save()
     return redirect(request.META.get('HTTP_REFERER', 'product_list'))
+
+class InvoiceCreateView(LoginRequiredMixin, TemplateView):
+    template_name = 'shop/invoice_create.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['clients'] = Client.objects.all()
+        context['products'] = Product.objects.all().order_by('name')
+        return context
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        try:
+            data = json.loads(request.body)
+            client_id = data.get('client_id')
+            is_credit = data.get('is_credit', False)
+            amount_paid = float(data.get('amount_paid', 0))
+            items_data = data.get('items', [])
+
+            if not items_data:
+                return JsonResponse({'success': False, 'error': 'No items in the invoice.'})
+
+            client = Client.objects.get(id=client_id) if client_id else None
+
+            # Create Invoice
+            invoice = Invoice.objects.create(
+                client=client,
+                is_credit=is_credit,
+                amount_paid=amount_paid
+            )
+
+            total_sale_price = 0
+
+            # Process items
+            for item in items_data:
+                product = Product.objects.get(id=item['product_id'])
+                quantity = int(item['quantity'])
+                price = float(item['price'])
+
+                if quantity <= 0:
+                    continue
+
+                if product.current_stock < quantity:
+                    raise ValueError(f"Not enough stock for {product.name}")
+
+                # Calculate FIFO cost price
+                cost_price = product.get_fifo_cost_price(quantity)
+                product.deduct_from_batches(quantity)
+
+                # Update current stock
+                product.current_stock -= quantity
+                product.save()
+
+                # Create SaleItem
+                SaleItem.objects.create(
+                    invoice=invoice,
+                    product=product,
+                    quantity=quantity,
+                    price_at_sale=price,
+                    cost_price=cost_price
+                )
+
+                # Create InventoryMovement OUT
+                InventoryMovement.objects.create(
+                    product=product,
+                    invoice=invoice,
+                    movement_type='OUT',
+                    quantity=quantity,
+                    reference=f'Invoice #{invoice.id}',
+                    cost_price=cost_price
+                )
+
+                total_sale_price += (quantity * price)
+
+            # Create MoneyJournal entry for the amount paid (if any) or if it's cash (the full amount)
+            amount_received = amount_paid if is_credit else total_sale_price
+            if amount_received > 0:
+                description = f"Invoice #{invoice.id}"
+                if client:
+                    description += f" - {client.name}"
+
+                MoneyJournal.objects.create(
+                    entry_type='Income',
+                    amount=amount_received,
+                    description=description,
+                    invoice=invoice,
+                    date=invoice.date
+                )
+
+            return JsonResponse({'success': True, 'invoice_id': invoice.id})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
+class InvoiceListView(LoginRequiredMixin, ListView):
+    model = Invoice
+    template_name = 'shop/invoice_list.html'
+    context_object_name = 'invoices'
+    paginate_by = 20
+    ordering = ['-date']
+
+class InvoiceDeleteView(ManagerRequiredMixin, LoginRequiredMixin, DeleteView):
+    model = Invoice
+    template_name = 'shop/invoice_confirm_delete.html'
+    success_url = reverse_lazy('invoice_list')
+
+    @transaction.atomic
+    def form_valid(self, form):
+        invoice = self.get_object()
+        
+        # Restore stock for each item
+        for item in invoice.items.all():
+            product = item.product
+            product.current_stock += item.quantity
+            product.save()
+            
+            # Create compensation stock-in to restore batches
+            InventoryMovement.objects.create(
+                product=product,
+                movement_type='IN',
+                quantity=item.quantity,
+                remaining_quantity=item.quantity,
+                reference=f'Invoice {invoice.id} deleted',
+                cost_price=item.cost_price
+            )
+
+        messages.success(self.request, f"Invoice #{invoice.id} deleted and stock restored.")
+        return super().form_valid(form)
+
+class InvoiceReceiptPDFView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        invoice = get_object_or_404(Invoice, pk=pk)
+        template = get_template('shop/invoice_receipt_pdf.html')
+        context = {
+            'invoice': invoice,
+            'current_date': timezone.now(),
+        }
+        html = template.render(context)
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="invoice_{invoice.id}.pdf"'
+        
+        pisa_status = pisa.CreatePDF(html, dest=response)
+        
+        if pisa_status.err:
+            return HttpResponse('We had some errors <pre>' + html + '</pre>')
+        return response

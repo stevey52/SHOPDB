@@ -4,38 +4,50 @@
 {% block header_title %}Expense Categories{% endblock %}
 
 {% block content %}
-<div class="content-header"
-    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-    <h3 style="color: var(--text-secondary);">Manage Categories</h3>
-    <a href="{% url 'category_create' %}" class="btn btn-primary">
-        <i data-lucide="plus" style="vertical-align: middle; width: 18px; margin-right: 5px;"></i> Add Category
-    </a>
-</div>
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h3 class="text-lg font-bold text-slate-800">Manage Categories</h3>
+            <p class="text-sm text-slate-500">View and add expense categories</p>
+        </div>
+        <a href="{% url 'category_create' %}" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-indigo-700 transition shadow-sm flex items-center gap-2 whitespace-nowrap">
+            <i data-lucide="plus" class="w-5 h-5"></i>
+            Add Category
+        </a>
+    </div>
 
-<div class="content-section glass" style="padding: 1.5rem;">
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Category Name</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for category in categories %}
-                <tr>
-                    <td style="font-weight: 500;">{{ category.name }}</td>
-                    <td>
-                        <span style="color: var(--text-secondary); font-size: 0.9em;">-</span>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="2" style="text-align: center; color: var(--text-secondary);">No categories found.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] uppercase font-bold tracking-widest">
+                    <tr>
+                        <th class="px-6 py-4 whitespace-nowrap">Category Name</th>
+                        <th class="px-6 py-4 whitespace-nowrap text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for category in categories %}
+                    <tr class="hover:bg-slate-50 transition group">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="font-semibold text-slate-800">{{ category.name }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <span class="text-slate-400 text-sm">-</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="px-6 py-10 text-center text-slate-500 text-sm">
+                            <div class="flex flex-col items-center justify-center">
+                                <i data-lucide="folder-open" class="w-12 h-12 text-slate-300 mb-3"></i>
+                                <p>No categories found.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock %}

@@ -5,79 +5,82 @@
 {% block header_title %}Clients & Debt Management{% endblock %}
 
 {% block content %}
-<div class="actions-bar"
-    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-    <form method="GET" class="search-form glass"
-        style="display: flex; gap: 0.5rem; padding: 0.5rem; border-radius: 8px;">
-        <input type="text" name="q" placeholder="Search clients..." value="{{ search_query }}"
-            style="background: transparent; border: none; color: white; padding: 0.5rem; outline: none; width: 250px;">
-        <button type="submit"
-            style="background: var(--primary); border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">
-            <i data-lucide="search" style="width: 18px; height: 18px;"></i>
-        </button>
-    </form>
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <form method="GET" class="flex gap-3 w-full sm:w-auto">
+            <div class="relative w-full sm:w-64">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" name="q" value="{{ search_query|default_if_none:'' }}" placeholder="Search clients..." class="pl-10 pr-4 py-2 w-full rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition">
+            </div>
+            <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition shadow-sm">Search</button>
+            {% if search_query %}
+            <a href="?" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-slate-200 transition">Clear</a>
+            {% endif %}
+        </form>
+        <a href="{% url 'client_create' %}" class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-indigo-700 transition flex items-center gap-2 flex-shrink-0 shadow-sm">
+            <i data-lucide="plus" class="w-5 h-5"></i> Add Client
+        </a>
+    </div>
 
-    <a href="{% url 'client_create' %}" class="btn btn-primary glass"
-        style="display: flex; align-items: center; gap: 0.5rem; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600;">
-        <i data-lucide="plus-circle"></i> Add New Client
-    </a>
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="table-container overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] uppercase font-bold tracking-widest">
+                    <tr>
+                        <th class="px-6 py-4 whitespace-nowrap">Client Details</th>
+                        <th class="px-6 py-4 whitespace-nowrap">Phone Number</th>
+                        <th class="px-6 py-4 whitespace-nowrap">Current Debt</th>
+                        <th class="px-6 py-4 whitespace-nowrap text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for client in clients %}
+                    <tr class="hover:bg-slate-50 transition group">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 flex-shrink-0">
+                                    <i data-lucide="user" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-slate-800 text-sm">{{ client.name }}</p>
+                                    <p class="text-xs text-slate-500">ID: CLT-{{ client.pk|stringformat:"04d" }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                            {{ client.phone|default:"---" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold {% if client.total_debt > 0 %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
+                                TZS {{ client.total_debt|floatformat:2 }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <a href="{% url 'client_detail' client.pk %}" class="inline-flex items-center gap-2 bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-indigo-50 hover:text-indigo-600 transition">
+                                <i data-lucide="eye" class="w-4 h-4"></i> View History
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-10 text-center text-slate-500 text-sm">
+                            <div class="flex flex-col items-center justify-center">
+                                <i data-lucide="users" class="w-12 h-12 text-slate-300 mb-3"></i>
+                                <p>No clients found.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Assuming we will make a standard Tailwind pagination component later -->
+        {% if is_paginated %}
+        <div class="px-6 py-4 border-t border-slate-100 bg-slate-50">
+            {% include 'shop/pagination.html' %}
+        </div>
+        {% endif %}
+    </div>
 </div>
-
-<div class="table-container glass" style="overflow: hidden; border-radius: 12px;">
-    <table style="width: 100%; border-collapse: collapse; text-align: left;">
-        <thead>
-            <tr style="background: rgba(255, 255, 255, 0.05); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-                <th style="padding: 1.25rem 1.5rem; font-weight: 600;">Name</th>
-                <th style="padding: 1.25rem 1.5rem; font-weight: 600;">Phone</th>
-                <th style="padding: 1.25rem 1.5rem; font-weight: 600;">Current Debt</th>
-                <th style="padding: 1.25rem 1.5rem; font-weight: 600; text-align: right;">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for client in clients %}
-            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: background 0.2s;"
-                onmouseover="this.style.background='rgba(255, 255, 255, 0.02)'"
-                onmouseout="this.style.background='transparent'">
-                <td style="padding: 1.25rem 1.5rem; font-weight: 500;">{{ client.name }}</td>
-                <td style="padding: 1.25rem 1.5rem; color: rgba(255, 255, 255, 0.7);">{{ client.phone|default:"---" }}
-                </td>
-                <td style="padding: 1.25rem 1.5rem;">
-                    <span class="{% if client.total_debt > 0 %}text-danger{% else %}text-success{% endif %}"
-                        style="font-weight: 600;">
-                        TZS {{ client.total_debt|floatformat:2 }}
-                    </span>
-                </td>
-                <td style="padding: 1.25rem 1.5rem; text-align: right;">
-                    <a href="{% url 'client_detail' client.pk %}" class="btn glass"
-                        style="padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.9rem; text-decoration: none; color: white;">
-                        View History
-                    </a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="4" style="padding: 3rem; text-align: center; color: rgba(255, 255, 255, 0.5);">
-                    No clients found.
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-{% if is_paginated %}
-<div class="pagination" style="display: flex; justify-content: center; gap: 1rem; margin-top: 2rem;">
-    {% if page_obj.has_previous %}
-    <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}"
-        class="btn glass">&laquo; Previous</a>
-    {% endif %}
-
-    <span style="padding: 0.5rem 1rem;" class="glass">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
-
-    {% if page_obj.has_next %}
-    <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}"
-        class="btn glass">Next &raquo;</a>
-    {% endif %}
-</div>
-{% endif %}
 {% endblock %}

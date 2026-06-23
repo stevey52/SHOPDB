@@ -1,42 +1,86 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - BOMBA MOTORS</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'shop/css/styles.css' %}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-
-<body style="display: flex; align-items: center; justify-content: center; height: 100vh;">
-    <div class="login-card glass" style="padding: 3rem; width: 100%; max-width: 400px; text-align: center;">
-        <h1 style="color: var(--accent-color); margin-bottom: 2rem; font-weight: 800;">BOMBA MOTORS</h1>
-        <h3 style="margin-bottom: 2rem; color: var(--text-secondary);">Welcome Back</h3>
-
-        <form method="post">
-            {% csrf_token %}
-            <div class="form-group" style="margin-bottom: 1.5rem; text-align: left;">
-                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Username</label>
-                <input type="text" name="username" class="glass"
-                    style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border);">
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+        <!-- Logo Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-600 text-white mb-4 shadow-lg shadow-indigo-200">
+                <i data-lucide="car" class="w-8 h-8"></i>
             </div>
-            <div class="form-group" style="margin-bottom: 2rem; text-align: left;">
-                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Password</label>
-                <input type="password" name="password" class="glass"
-                    style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border);">
-            </div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">BOMBA MOTORS</h1>
+            <p class="text-slate-500 mt-1">Sign in to your account</p>
+        </div>
 
-            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem;">Login</button>
-        </form>
+        <!-- Login Form -->
+        <div class="bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                <div class="bg-red-50 text-red-700 p-4 rounded-xl text-sm border border-red-100 flex items-start gap-3">
+                    <i data-lucide="alert-circle" class="w-5 h-5 flex-shrink-0 mt-0.5 text-red-500"></i>
+                    <p>Invalid username or password.</p>
+                </div>
+                {% endif %}
 
-        {% if form.errors %}
-        <p style="color: var(--danger); margin-top: 1rem;">Invalid username or password.</p>
-        {% endif %}
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Username</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                                <i data-lucide="user" class="w-5 h-5"></i>
+                            </div>
+                            <input type="text" name="username" required 
+                                class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition text-slate-800 bg-slate-50 focus:bg-white"
+                                placeholder="Enter your username">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-semibold text-slate-700">Password</label>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                                <i data-lucide="lock" class="w-5 h-5"></i>
+                            </div>
+                            <input type="password" name="password" required 
+                                class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none transition text-slate-800 bg-slate-50 focus:bg-white"
+                                placeholder="••••••••">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-xl hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-500/20 transition-all shadow-md hover:shadow-lg flex justify-center items-center gap-2">
+                    <span>Sign In</span>
+                    <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </button>
+            </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-8">
+            <p class="text-sm text-slate-500">
+                &copy; {% now "Y" %} Bomba Motors. All rights reserved.
+            </p>
+        </div>
     </div>
-</body>
 
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+    </script>
+</body>
 </html>

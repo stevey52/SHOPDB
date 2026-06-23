@@ -1,7 +1,7 @@
 {% extends 'shop/base.html' %}
 
-{% block title %}Delete Debt Payment - BOMBA MOTORS{% endblock %}
-{% block header_title %}Delete Payment{% endblock %}
+{% block title %}Delete Invoice - BOMBA MOTORS{% endblock %}
+{% block header_title %}Delete Invoice{% endblock %}
 
 {% block content %}
 <div class="max-w-xl mx-auto">
@@ -13,14 +13,12 @@
         <h3 class="text-2xl font-bold text-slate-800 mb-4">Confirm Deletion</h3>
         
         <p class="text-slate-600 mb-6 leading-relaxed">
-            Are you sure you want to delete the payment of
-            <strong>TZS {{ object.amount }}</strong> recorded on
-            {{ object.date|date:"Y-m-d" }}?
+            Are you sure you want to delete Invoice <strong>#{{ object.id }}</strong>?
         </p>
 
         <div class="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl text-sm mb-8 flex items-start gap-3 text-left">
             <i data-lucide="info" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
-            <p><strong>Warning:</strong> This will restore the client's debt balance and remove the associated financial records.</p>
+            <p><strong>Warning:</strong> Deleting this invoice will reverse all stock deductions and income records associated with it. This action cannot be undone.</p>
         </div>
 
         <form method="post" class="flex flex-col sm:flex-row gap-4 justify-center">
@@ -28,7 +26,7 @@
             <button type="submit" class="bg-red-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-red-700 transition shadow-sm w-full sm:w-auto">
                 Confirm Delete
             </button>
-            <a href="{% url 'client_list' %}" class="bg-slate-100 text-slate-700 px-8 py-3 rounded-xl font-semibold hover:bg-slate-200 transition shadow-sm w-full sm:w-auto text-center">
+            <a href="{% url 'invoice_list' %}" class="bg-slate-100 text-slate-700 px-8 py-3 rounded-xl font-semibold hover:bg-slate-200 transition shadow-sm w-full sm:w-auto text-center">
                 Cancel
             </a>
         </form>

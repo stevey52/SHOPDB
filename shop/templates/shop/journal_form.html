@@ -4,48 +4,94 @@
 {% block header_title %}Add Journal Entry{% endblock %}
 
 {% block content %}
-<div class="content-section glass" style="padding: 2rem; max-width: 600px; margin: 0 auto;">
-    <form method="post">
-        {% csrf_token %}
-        <div class="form-group" style="margin-bottom: 1.5rem;">
-            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Entry Type</label>
-            <select name="entry_type" class="glass"
-                style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border); background: var(--glass-bg);">
-                <option value="Expense" style="color: black;">Expense</option>
-                <option value="Income" style="color: black;">Income</option>
-            </select>
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center gap-3">
+            <div class="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600">
+                <i data-lucide="plus" class="w-5 h-5"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800">Add New Journal Entry</h3>
         </div>
-        <div class="form-group" style="margin-bottom: 1.5rem;">
-            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Date</label>
-            <input type="date" name="date" value="{{ form.date.value|default:'' }}" class="glass"
-                style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border);">
-        </div>
-        <div class="form-group" style="margin-bottom: 1.5rem;">
-            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Amount (TZS)</label>
-            <input type="number" step="0.01" name="amount" value="{{ form.amount.value|default:'' }}" class="glass"
-                style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border);">
-        </div>
-        <div class="form-group" style="margin-bottom: 1.5rem;">
-            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Category</label>
-            <select name="category" class="glass"
-                style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border); background: var(--glass-bg);">
-                <option value="" style="color: black;">-- Select Category --</option>
-                {% for category in form.category.field.queryset %}
-                <option value="{{ category.id }}" style="color: black;" {% if form.category.value == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group" style="margin-bottom: 1.5rem;">
-            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary);">Description</label>
-            <textarea name="description" class="glass"
-                style="width: 100%; padding: 0.75rem; color: white; border-color: var(--glass-border); min-height: 100px;">{{ form.description.value|default:'' }}</textarea>
-        </div>
+        
+        <div class="p-6">
+            <form method="post" class="space-y-5">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                <div class="bg-red-50 text-red-700 p-4 rounded-xl text-sm mb-4 border border-red-200">
+                    <p class="font-bold mb-1">Please correct the errors below:</p>
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
 
-        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-            <button type="submit" class="btn btn-primary" style="flex: 1;">Save Entry</button>
-            <a href="{% url 'money_journal' %}" class="btn glass"
-                style="flex: 1; text-align: center; text-decoration: none; color: white;">Cancel</a>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Entry Type</label>
+                        <div class="relative">
+                            <select name="entry_type" required class="w-full pl-4 pr-10 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition appearance-none bg-white">
+                                <option value="Expense" {% if form.entry_type.value == 'Expense' %}selected{% endif %}>Expense</option>
+                                <option value="Income" {% if form.entry_type.value == 'Income' %}selected{% endif %}>Income</option>
+                            </select>
+                            <i data-lucide="chevron-down" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                        </div>
+                        {% if form.entry_type.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.entry_type.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Date</label>
+                        <input type="date" name="date" value="{{ form.date.value|default:'' }}" required class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                        {% if form.date.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.date.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Amount (TZS)</label>
+                        <input type="number" step="0.01" name="amount" value="{{ form.amount.value|default:'' }}" required class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                        {% if form.amount.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.amount.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Category (Optional)</label>
+                        <div class="relative">
+                            <select name="category" class="w-full pl-4 pr-10 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition appearance-none bg-white">
+                                <option value="">-- Select Category --</option>
+                                {% for category in form.category.field.queryset %}
+                                <option value="{{ category.id }}" {% if form.category.value == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <i data-lucide="chevron-down" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                        </div>
+                        {% if form.category.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.category.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Description</label>
+                    <textarea name="description" rows="3" required class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition">{{ form.description.value|default:'' }}</textarea>
+                    {% if form.description.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.description.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 pt-4">
+                    <button type="submit" class="w-full sm:w-auto flex-1 bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition flex items-center justify-center gap-2 shadow-sm">
+                        <i data-lucide="save" class="w-5 h-5"></i> Save Entry
+                    </button>
+                    <a href="{% url 'money_journal' %}" class="w-full sm:w-auto flex-1 bg-white text-slate-700 border border-slate-200 px-6 py-3 rounded-xl font-semibold hover:bg-slate-50 transition flex items-center justify-center gap-2 shadow-sm">
+                        Cancel
+                    </a>
+                </div>
+            </form>
         </div>
-    </form>
+    </div>
 </div>
 {% endblock %}

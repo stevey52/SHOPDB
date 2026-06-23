@@ -1,17 +1,15 @@
 {% if is_paginated %}
-<div class="pagination glass" style="display: flex; justify-content: center; gap: 0.5rem; padding: 1rem; margin-top: 1.5rem; align-items: center;">
+<nav class="flex justify-center gap-2 mt-4">
     {% if page_obj.has_previous %}
-    <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn glass" style="padding: 0.5rem 0.75rem; color: white; text-decoration: none;">&laquo; First</a>
-    <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn glass" style="padding: 0.5rem 0.75rem; color: white; text-decoration: none;">Previous</a>
+    <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition hidden sm:inline-block">&laquo; First</a>
+    <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition">Previous</a>
     {% endif %}
-
-    <span style="color: var(--text-secondary); margin: 0 0.5rem;">
-        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-    </span>
-
+    
+    <span class="px-4 py-2 bg-slate-100 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    
     {% if page_obj.has_next %}
-    <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn glass" style="padding: 0.5rem 0.75rem; color: white; text-decoration: none;">Next</a>
-    <a href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="btn glass" style="padding: 0.5rem 0.75rem; color: white; text-decoration: none;">Last &raquo;</a>
+    <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition">Next</a>
+    <a href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition hidden sm:inline-block">Last &raquo;</a>
     {% endif %}
-</div>
+</nav>
 {% endif %}

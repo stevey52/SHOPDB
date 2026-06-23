@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopMaster Dashboard Preview</title>
+    <!-- Tailwind CSS for Modern Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .nav-link.active { background: #4f46e5; color: white; }
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="bg-slate-50 flex">
+
+    <!-- SIDEBAR -->
+    <aside class="fixed left-0 top-0 h-screen w-64 bg-slate-900 text-white flex flex-col z-50">
+        <div class="p-6 flex items-center gap-3">
+            <div class="bg-indigo-600 p-2 rounded-lg">
+                <i data-lucide="store" class="w-6 h-6"></i>
+            </div>
+            <span class="text-xl font-bold tracking-tight">ShopMaster</span>
+        </div>
+
+        <nav class="flex-1 px-4 space-y-2 mt-4">
+            <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-link active w-full flex items-center gap-3 p-3 rounded-xl transition">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+            </button>
+            <button onclick="switchTab('products')" id="btn-products" class="nav-link w-full text-slate-400 hover:text-white flex items-center gap-3 p-3 rounded-xl transition">
+                <i data-lucide="package" class="w-5 h-5"></i> Products
+            </button>
+            <button class="nav-link w-full text-slate-400 hover:text-white flex items-center gap-3 p-3 rounded-xl transition text-left">
+                <i data-lucide="shopping-cart" class="w-5 h-5"></i> Sales
+            </button>
+            <button class="nav-link w-full text-slate-400 hover:text-white flex items-center gap-3 p-3 rounded-xl transition text-left">
+                <i data-lucide="users" class="w-5 h-5"></i> Customers
+            </button>
+            <hr class="border-slate-800 my-4">
+            <button class="nav-link w-full text-slate-400 hover:text-white flex items-center gap-3 p-3 rounded-xl transition text-left">
+                <i data-lucide="settings" class="w-5 h-5"></i> Settings
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-slate-800">
+            <div class="flex items-center gap-3 p-2">
+                <img src="https://ui-avatars.com/api/?name=Admin+User&background=4f46e5&color=fff" class="w-10 h-10 rounded-full">
+                <div>
+                    <p class="text-sm font-medium">Alex Rivera</p>
+                    <p class="text-xs text-slate-500">Manager</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="ml-64 flex-1 min-h-screen">
+        
+        <!-- TOP NAVBAR -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-40">
+            <h1 id="page-title" class="text-lg font-semibold text-slate-800">Dashboard Overview</h1>
+            <div class="flex items-center gap-6">
+                <div class="relative">
+                    <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" placeholder="Search data..." class="bg-slate-100 border-none rounded-full pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-indigo-500 w-64">
+                </div>
+                <button class="relative text-slate-500 hover:text-indigo-600">
+                    <i data-lucide="bell" class="w-6 h-6"></i>
+                    <span class="absolute -top-1 -right-1 bg-red-500 w-2 h-2 rounded-full border-2 border-white"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- DYNAMIC CONTENT AREA -->
+        <div class="p-8">
+            
+            <!-- VIEW 1: DASHBOARD -->
+            <div id="view-dashboard" class="space-y-8">
+                <!-- STATS CARDS -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl"><i data-lucide="dollar-sign"></i></div>
+                            <span class="text-green-500 text-sm font-bold flex items-center"><i data-lucide="trending-up" class="w-4 h-4 mr-1"></i> 12.5%</span>
+                        </div>
+                        <p class="text-slate-500 text-sm font-medium">Total Revenue</p>
+                        <h3 class="text-2xl font-bold text-slate-800 mt-1">$54,230.00</h3>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><i data-lucide="shopping-bag"></i></div>
+                            <span class="text-green-500 text-sm font-bold flex items-center"><i data-lucide="trending-up" class="w-4 h-4 mr-1"></i> 8.2%</span>
+                        </div>
+                        <p class="text-slate-500 text-sm font-medium">Total Sales</p>
+                        <h3 class="text-2xl font-bold text-slate-800 mt-1">1,205</h3>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-orange-50 text-orange-600 rounded-xl"><i data-lucide="alert-triangle"></i></div>
+                            <span class="text-red-500 text-sm font-bold italic">Requires Action</span>
+                        </div>
+                        <p class="text-slate-500 text-sm font-medium">Low Stock Items</p>
+                        <h3 class="text-2xl font-bold text-slate-800 mt-1">12</h3>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 bg-blue-50 text-blue-600 rounded-xl"><i data-lucide="users"></i></div>
+                            <span class="text-green-500 text-sm font-bold flex items-center"><i data-lucide="trending-up" class="w-4 h-4 mr-1"></i> 4.1%</span>
+                        </div>
+                        <p class="text-slate-500 text-sm font-medium">Customers</p>
+                        <h3 class="text-2xl font-bold text-slate-800 mt-1">840</h3>
+                    </div>
+                </div>
+
+                <!-- CHARTS ROW -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold text-slate-800">Sales Performance</h3>
+                            <select class="text-sm border-none bg-slate-100 rounded-lg px-3 py-1">
+                                <option>Last 7 Days</option>
+                                <option>Last 30 Days</option>
+                            </select>
+                        </div>
+                        <canvas id="mainSalesChart" height="120"></canvas>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <h3 class="font-bold text-slate-800 mb-6">Category Revenue</h3>
+                        <canvas id="categoryChart" height="250"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: PRODUCTS (Hidden by default) -->
+            <div id="view-products" class="hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <div class="flex gap-4">
+                        <input type="text" placeholder="Filter by name..." class="px-4 py-2 rounded-xl border border-slate-200 text-sm w-64 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <select class="px-4 py-2 rounded-xl border border-slate-200 text-sm">
+                            <option>All Categories</option>
+                            <option>Electronics</option>
+                            <option>Accessories</option>
+                        </select>
+                    </div>
+                    <button class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-indigo-700 transition flex items-center gap-2">
+                        <i data-lucide="plus" class="w-5 h-5"></i> Add Product
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="px-6 py-4">Product Details</th>
+                                <th class="px-6 py-4">Category</th>
+                                <th class="px-6 py-4">Price</th>
+                                <th class="px-6 py-4">Stock Status</th>
+                                <th class="px-6 py-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-indigo-600"><i data-lucide="laptop"></i></div>
+                                        <div>
+                                            <p class="font-semibold text-slate-800 text-sm">MacBook Pro M2</p>
+                                            <p class="text-xs text-slate-500">ID: PRD-9921</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-slate-600">Electronics</td>
+                                <td class="px-6 py-4 text-sm font-bold text-slate-800">$1,299.00</td>
+                                <td class="px-6 py-4">
+                                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">In Stock (45)</span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button class="text-slate-400 hover:text-indigo-600 mr-3"><i data-lucide="edit-3" class="w-5 h-5"></i></button>
+                                    <button class="text-slate-400 hover:text-red-600"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center text-indigo-600"><i data-lucide="headphones"></i></div>
+                                        <div>
+                                            <p class="font-semibold text-slate-800 text-sm">Sony WH-1000XM5</p>
+                                            <p class="text-xs text-slate-500">ID: PRD-1022</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-slate-600">Accessories</td>
+                                <td class="px-6 py-4 text-sm font-bold text-slate-800">$348.00</td>
+                                <td class="px-6 py-4">
+                                    <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">Low Stock (3)</span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button class="text-slate-400 hover:text-indigo-600 mr-3"><i data-lucide="edit-3" class="w-5 h-5"></i></button>
+                                    <button class="text-slate-400 hover:text-red-600"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // View Switching Logic
+        function switchTab(tab) {
+            const dashboard = document.getElementById('view-dashboard');
+            const products = document.getElementById('view-products');
+            const title = document.getElementById('page-title');
+            
+            // Buttons
+            const btnDash = document.getElementById('btn-dashboard');
+            const btnProd = document.getElementById('btn-products');
+
+            if(tab === 'dashboard') {
+                dashboard.classList.remove('hidden');
+                products.classList.add('hidden');
+                title.innerText = "Dashboard Overview";
+                btnDash.classList.add('active', 'text-white');
+                btnProd.classList.remove('active', 'text-white');
+                btnProd.classList.add('text-slate-400');
+            } else {
+                dashboard.classList.add('hidden');
+                products.classList.remove('hidden');
+                title.innerText = "Product Management";
+                btnProd.classList.add('active', 'text-white');
+                btnDash.classList.remove('active', 'text-white');
+                btnDash.classList.add('text-slate-400');
+            }
+        }
+
+        // CHARTS CONFIGURATION
+        const ctxSales = document.getElementById('mainSalesChart').getContext('2d');
+        new Chart(ctxSales, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Sales ($)',
+                    data: [12000, 19000, 15000, 25000, 22000, 30000, 42000],
+                    borderColor: '#4f46e5',
+                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#4f46e5'
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { borderDash: [5, 5] } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        const ctxCat = document.getElementById('categoryChart').getContext('2d');
+        new Chart(ctxCat, {
+            type: 'doughnut',
+            data: {
+                labels: ['Electronics', 'Home', 'Groceries', 'Clothing'],
+                datasets: [{
+                    data: [45, 15, 25, 15],
+                    backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#3b82f6'],
+                    hoverOffset: 10,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                cutout: '70%',
+                plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true } } }
+            }
+        });
+    </script>
+</body>
+</html>

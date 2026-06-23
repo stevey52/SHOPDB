@@ -1,0 +1,355 @@
+{% extends 'shop/base.html' %}
+
+{% block title %}New Invoice - BOMBA MOTORS{% endblock %}
+{% block header_title %}New Invoice{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600">
+                    <i data-lucide="file-plus" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">Create New Invoice</h3>
+                    <p class="text-sm text-slate-500">Record a sale with multiple items</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <div id="alert-container"></div>
+            
+            <form id="invoice-form" class="space-y-6">
+                <!-- Header Info -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 bg-slate-50 p-6 rounded-xl border border-slate-200">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Client (Optional)</label>
+                        <div class="relative">
+                            <select id="client" class="w-full pl-4 pr-10 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition appearance-none bg-white">
+                                <option value="">-- Walk-in Customer --</option>
+                                {% for client in clients %}
+                                <option value="{{ client.id }}">{{ client.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <i data-lucide="chevron-down" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Payment Type</label>
+                        <label class="flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 bg-white cursor-pointer hover:bg-slate-50 transition">
+                            <input type="checkbox" id="is_credit" class="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                            <span class="text-sm font-medium text-slate-700">Credit Sale</span>
+                        </label>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Amount Paid</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-slate-500 font-medium">TZS</span>
+                            </div>
+                            <input type="number" step="0.01" min="0" id="amount_paid" class="w-full pl-12 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition bg-white" value="0.00">
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1" id="amount-paid-help">Leave 0 if full credit.</p>
+                    </div>
+                </div>
+
+                <!-- Items Table -->
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-lg font-bold text-slate-800">Invoice Items</h4>
+                        <button type="button" id="add-item-btn" class="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-100 transition flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Add Item
+                        </button>
+                    </div>
+                    
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                        <table class="w-full text-left border-collapse" id="items-table">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] uppercase font-bold tracking-widest">
+                                <tr>
+                                    <th class="px-4 py-3 w-[40%]">Product</th>
+                                    <th class="px-4 py-3 w-[15%]">Quantity</th>
+                                    <th class="px-4 py-3 w-[20%]">Unit Price (TZS)</th>
+                                    <th class="px-4 py-3 w-[20%] text-right">Total (TZS)</th>
+                                    <th class="px-4 py-3 w-[5%]"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <!-- Rows will be added here by JS -->
+                            </tbody>
+                            <tfoot class="bg-slate-50 border-t border-slate-200">
+                                <tr>
+                                    <th colspan="3" class="px-4 py-4 text-right text-sm font-bold text-slate-700">Grand Total:</th>
+                                    <th id="grand-total" class="px-4 py-4 text-right text-lg font-bold text-indigo-600">0.00</th>
+                                    <th></th>
+                                </tr>
+                                <tr id="balance-row" style="display: none;" class="bg-red-50/50">
+                                    <th colspan="3" class="px-4 py-3 text-right text-sm font-bold text-red-600">Balance Due:</th>
+                                    <th id="balance-due" class="px-4 py-3 text-right text-lg font-bold text-red-600">0.00</th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-slate-100">
+                    <a href="{% url 'invoice_list' %}" class="w-full sm:w-auto bg-white text-slate-700 border border-slate-200 px-6 py-3 rounded-xl font-semibold hover:bg-slate-50 transition flex items-center justify-center shadow-sm">
+                        Cancel
+                    </a>
+                    <button type="button" id="submit-btn" class="w-full sm:w-auto bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition flex items-center justify-center gap-2 shadow-sm">
+                        <i data-lucide="save" class="w-5 h-5"></i> Save Invoice
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Product Data for JS -->
+<script>
+    const productsData = {
+        {% for p in products %}
+        "{{ p.id }}": {
+            "name": "{{ p.name|escapejs }}",
+            "price": {{ p.unit_price }},
+            "stock": {{ p.current_stock }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    };
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tableBody = document.querySelector('#items-table tbody');
+    const addItemBtn = document.getElementById('add-item-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const grandTotalEl = document.getElementById('grand-total');
+    const isCreditCb = document.getElementById('is_credit');
+    const amountPaidInput = document.getElementById('amount_paid');
+    const balanceRow = document.getElementById('balance-row');
+    const balanceDueEl = document.getElementById('balance-due');
+    const alertContainer = document.getElementById('alert-container');
+    const amountPaidHelp = document.getElementById('amount-paid-help');
+
+    let rowCount = 0;
+
+    function formatMoney(amount) {
+        return parseFloat(amount).toFixed(2);
+    }
+
+    function createRow() {
+        rowCount++;
+        const tr = document.createElement('tr');
+        tr.id = `item-row-${rowCount}`;
+        tr.className = "group hover:bg-slate-50 transition";
+        
+        // Build product options
+        let options = '<option value="">-- Select Product --</option>';
+        for (const [id, prod] of Object.entries(productsData)) {
+            const stockWarning = prod.stock <= 0 ? ' (Out of stock)' : ` (${prod.stock} in stock)`;
+            options += `<option value="${id}">${prod.name}${stockWarning}</option>`;
+        }
+
+        tr.innerHTML = `
+            <td class="px-4 py-3">
+                <div class="relative">
+                    <select class="w-full pl-3 pr-8 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition appearance-none bg-white text-sm product-select" required>
+                        ${options}
+                    </select>
+                    <i data-lucide="chevron-down" class="w-4 h-4 absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                </div>
+            </td>
+            <td class="px-4 py-3">
+                <input type="number" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm text-center quantity-input" min="1" value="1" required>
+            </td>
+            <td class="px-4 py-3">
+                <input type="number" class="w-full px-3 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition text-sm text-right price-input" step="0.01" min="0" required>
+            </td>
+            <td class="px-4 py-3 text-right font-bold text-slate-700 row-total align-middle">
+                0.00
+            </td>
+            <td class="px-4 py-3 text-center">
+                <button type="button" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition remove-btn" title="Remove item">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </td>
+        `;
+
+        tableBody.appendChild(tr);
+        // Re-initialize Lucide icons for new elements
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+
+        // Event listeners
+        const productSelect = tr.querySelector('.product-select');
+        const qtyInput = tr.querySelector('.quantity-input');
+        const priceInput = tr.querySelector('.price-input');
+        const removeBtn = tr.querySelector('.remove-btn');
+
+        productSelect.addEventListener('change', function() {
+            const prodId = this.value;
+            if (prodId && productsData[prodId]) {
+                priceInput.value = productsData[prodId].price;
+                if (productsData[prodId].stock <= 0) {
+                    showAlert(`Warning: ${productsData[prodId].name} is out of stock.`, 'amber');
+                }
+            } else {
+                priceInput.value = '';
+            }
+            updateRowTotal(tr);
+        });
+
+        qtyInput.addEventListener('input', () => updateRowTotal(tr));
+        priceInput.addEventListener('input', () => updateRowTotal(tr));
+
+        removeBtn.addEventListener('click', function() {
+            tr.remove();
+            updateGrandTotal();
+        });
+    }
+
+    function updateRowTotal(tr) {
+        const qty = parseFloat(tr.querySelector('.quantity-input').value) || 0;
+        const price = parseFloat(tr.querySelector('.price-input').value) || 0;
+        const total = qty * price;
+        tr.querySelector('.row-total').textContent = formatMoney(total);
+        updateGrandTotal();
+    }
+
+    function updateGrandTotal() {
+        let total = 0;
+        document.querySelectorAll('.row-total').forEach(el => {
+            total += parseFloat(el.textContent) || 0;
+        });
+        grandTotalEl.textContent = formatMoney(total);
+        updateBalance();
+    }
+
+    function updateBalance(e) {
+        const total = parseFloat(grandTotalEl.textContent) || 0;
+        
+        if (e && e.target === isCreditCb) {
+            if (isCreditCb.checked) {
+                amountPaidInput.value = '0.00';
+            }
+        }
+
+        const paid = parseFloat(amountPaidInput.value) || 0;
+        
+        if (isCreditCb.checked) {
+            balanceRow.style.display = 'table-row';
+            const balance = total - paid;
+            balanceDueEl.textContent = formatMoney(balance);
+            amountPaidInput.disabled = false;
+            amountPaidInput.classList.remove('bg-slate-100');
+            amountPaidHelp.textContent = 'Enter the partial payment received.';
+        } else {
+            balanceRow.style.display = 'none';
+            amountPaidInput.value = total.toFixed(2);
+            amountPaidInput.disabled = true;
+            amountPaidInput.classList.add('bg-slate-100');
+            amountPaidHelp.textContent = 'Auto-filled for cash sale.';
+        }
+    }
+
+    isCreditCb.addEventListener('change', updateBalance);
+    amountPaidInput.addEventListener('input', updateBalance);
+
+    function showAlert(msg, type='red') {
+        alertContainer.innerHTML = `
+            <div class="bg-${type}-50 text-${type}-700 p-4 rounded-xl border border-${type}-200 mb-6 flex items-start justify-between">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="alert-circle" class="w-5 h-5 text-${type}-500 flex-shrink-0 mt-0.5"></i>
+                    <p class="font-medium">${msg}</p>
+                </div>
+                <button type="button" class="text-${type}-500 hover:text-${type}-700" onclick="this.parentElement.remove()">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+        `;
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+
+    // Initialize with one row
+    createRow();
+    addItemBtn.addEventListener('click', createRow);
+
+    // Submit via AJAX
+    submitBtn.addEventListener('click', function() {
+        const clientId = document.getElementById('client').value;
+        const isCredit = isCreditCb.checked;
+        const amountPaid = parseFloat(amountPaidInput.value) || 0;
+        
+        const items = [];
+        let hasError = false;
+
+        document.querySelectorAll('#items-table tbody tr').forEach(tr => {
+            const prodId = tr.querySelector('.product-select').value;
+            const qty = parseFloat(tr.querySelector('.quantity-input').value);
+            const price = parseFloat(tr.querySelector('.price-input').value);
+
+            if (prodId && qty > 0) {
+                items.push({
+                    product_id: prodId,
+                    quantity: qty,
+                    price: price
+                });
+            } else if (prodId) {
+                hasError = true;
+                showAlert('Quantity must be greater than 0.', 'red');
+            }
+        });
+
+        if (hasError) return;
+        if (items.length === 0) {
+            showAlert('Please add at least one item to the invoice.', 'red');
+            return;
+        }
+
+        // Disable button to prevent double submit
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Saving...';
+        lucide.createIcons();
+
+        fetch('{% url "invoice_create" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                client_id: clientId,
+                is_credit: isCredit,
+                amount_paid: amountPaid,
+                items: items
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '{% url "invoice_list" %}';
+            } else {
+                showAlert(data.error, 'red');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i data-lucide="save" class="w-5 h-5"></i> Save Invoice';
+                lucide.createIcons();
+            }
+        })
+        .catch(err => {
+            showAlert('A network error occurred.', 'red');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i data-lucide="save" class="w-5 h-5"></i> Save Invoice';
+            lucide.createIcons();
+        });
+    });
+});
+</script>
+{% endblock %}

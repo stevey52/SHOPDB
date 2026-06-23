@@ -5,136 +5,149 @@
 {% block header_title %}Sales Report{% endblock %}
 
 {% block content %}
-<div class="content-header"
-    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-    <h3 style="color: var(--text-secondary);">Sales Report</h3>
-    <div style="display: flex; gap: 1rem;">
-        <a href="{% url 'dashboard' %}" class="btn glass" style="color: white; text-decoration: none;">
-            <i data-lucide="home" style="width: 16px; height: 16px; margin-right: 5px;"></i> Dashboard
-        </a>
-        <a href="{% url 'profit_report' %}" class="btn glass" style="color: white; text-decoration: none;">
-            <i data-lucide="trending-up" style="width: 16px; height: 16px; margin-right: 5px;"></i> Profit Report
-        </a>
+<div class="space-y-6">
+    <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
+        <form method="GET" class="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <span class="text-sm text-slate-500 hidden sm:inline">From</span>
+                <input type="date" name="start_date" value="{{ start_date }}" class="px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition w-full sm:w-auto">
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <span class="text-sm text-slate-500 hidden sm:inline">To</span>
+                <input type="date" name="end_date" value="{{ end_date }}" class="px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition w-full sm:w-auto">
+            </div>
+            
+            <div class="flex gap-2">
+                <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition shadow-sm whitespace-nowrap">Filter</button>
+                <a href="{% url 'sales_report' %}" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-slate-200 transition flex items-center justify-center whitespace-nowrap">Clear</a>
+            </div>
+        </form>
+        
+        <div class="flex gap-3 w-full xl:w-auto">
+            <a href="{% url 'dashboard' %}" class="bg-white text-slate-700 border border-slate-200 px-6 py-2.5 rounded-xl font-semibold hover:bg-slate-50 transition flex items-center justify-center gap-2 w-full sm:w-auto flex-shrink-0 shadow-sm">
+                <i data-lucide="home" class="w-5 h-5 text-indigo-600"></i> Dashboard
+            </a>
+            <a href="{% url 'profit_report' %}" class="bg-white text-slate-700 border border-slate-200 px-6 py-2.5 rounded-xl font-semibold hover:bg-slate-50 transition flex items-center justify-center gap-2 w-full sm:w-auto flex-shrink-0 shadow-sm">
+                <i data-lucide="trending-up" class="w-5 h-5 text-indigo-600"></i> Profit Report
+            </a>
+        </div>
     </div>
-</div>
 
-<!-- Date Filter Form -->
-<div class="content-section glass" style="padding: 1.5rem; margin-bottom: 1.5rem;">
-    <form method="get" style="display: flex; gap: 1rem; align-items: end; flex-wrap: wrap;">
-        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <label style="color: var(--text-secondary); font-size: 0.9rem;">Start Date</label>
-            <input type="date" name="start_date" value="{{ start_date }}" class="glass"
-                style="padding: 0.5rem; color: white; border-color: var(--glass-border);">
+    <!-- Summary Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <span class="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Revenue</span>
+            <h3 class="text-2xl font-bold mt-2 text-green-600">TZS {{ total_revenue|floatformat:2|intcomma }}</h3>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <label style="color: var(--text-secondary); font-size: 0.9rem;">End Date</label>
-            <input type="date" name="end_date" value="{{ end_date }}" class="glass"
-                style="padding: 0.5rem; color: white; border-color: var(--glass-border);">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <span class="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Cost</span>
+            <h3 class="text-2xl font-bold mt-2 text-yellow-600">TZS {{ total_cost|floatformat:2|intcomma }}</h3>
         </div>
-        <div style="display: flex; gap: 0.5rem;">
-            <button type="submit" class="btn btn-primary">Filter</button>
-            <a href="{% url 'sales_report' %}" class="btn glass" style="color: white; text-decoration: none;">Clear</a>
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <span class="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Profit</span>
+            <h3 class="text-2xl font-bold mt-2 {% if total_profit >= 0 %}text-emerald-600{% else %}text-red-600{% endif %}">
+                TZS {{ total_profit|floatformat:2|intcomma }}
+            </h3>
         </div>
-    </form>
-</div>
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <span class="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Sales</span>
+            <h3 class="text-2xl font-bold mt-2 text-indigo-600">{{ total_sales|intcomma }}</h3>
+        </div>
+    </div>
 
-<!-- Summary Statistics -->
-<div class="stats-grid" style="margin-bottom: 2rem;">
-    <div class="stat-card glass">
-        <div class="stat-label">Total Revenue</div>
-        <div class="stat-value text-success">TZS {{ total_revenue|floatformat:2|intcomma }}</div>
-    </div>
-    <div class="stat-card glass">
-        <div class="stat-label">Total Cost</div>
-        <div class="stat-value text-warning">TZS {{ total_cost|floatformat:2|intcomma }}</div>
-    </div>
-    <div class="stat-card glass">
-        <div class="stat-label">Total Profit</div>
-        <div class="stat-value {% if total_profit >= 0 %}text-success{% else %}text-danger{% endif %}">
-            TZS {{ total_profit|floatformat:2|intcomma }}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <span class="text-sm font-medium text-slate-500 uppercase tracking-wider">Cash Sales</span>
+            <h3 class="text-xl font-bold mt-2 text-green-600">TZS {{ cash_revenue|floatformat:2|intcomma }}</h3>
+            <p class="text-xs text-slate-400 mt-1">{{ cash_sales_count }} sales</p>
         </div>
-    </div>
-    <div class="stat-card glass">
-        <div class="stat-label">Total Sales</div>
-        <div class="stat-value">{{ total_sales|intcomma }}</div>
-    </div>
-</div>
-
-<div class="stats-grid" style="margin-bottom: 2rem;">
-    <div class="stat-card glass">
-        <div class="stat-label">Cash Sales</div>
-        <div class="stat-value text-success">TZS {{ cash_revenue|floatformat:2|intcomma }}</div>
-        <div style="font-size: 0.8rem; color: var(--text-secondary);">{{ cash_sales_count }} sales</div>
-    </div>
-    <div class="stat-card glass">
-        <div class="stat-label">Credit Sales</div>
-        <div class="stat-value text-info">TZS {{ credit_revenue|floatformat:2|intcomma }}</div>
-        <div style="font-size: 0.8rem; color: var(--text-secondary);">{{ credit_sales_count }} sales</div>
-    </div>
-    <div class="stat-card glass">
-        <div class="stat-label">Outstanding Credit</div>
-        <div class="stat-value {% if outstanding_credit > 0 %}text-danger{% else %}text-warning{% endif %}">
-            TZS {{ outstanding_credit|floatformat:2|intcomma }}
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <span class="text-sm font-medium text-slate-500 uppercase tracking-wider">Credit Sales</span>
+            <h3 class="text-xl font-bold mt-2 text-blue-600">TZS {{ credit_revenue|floatformat:2|intcomma }}</h3>
+            <p class="text-xs text-slate-400 mt-1">{{ credit_sales_count }} sales</p>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <span class="text-sm font-medium text-slate-500 uppercase tracking-wider">Outstanding Credit</span>
+            <h3 class="text-xl font-bold mt-2 {% if outstanding_credit > 0 %}text-red-600{% else %}text-yellow-600{% endif %}">
+                TZS {{ outstanding_credit|floatformat:2|intcomma }}
+            </h3>
             {% if outstanding_credit == 0 %}
-                <span style="font-size: 0.8rem; color: var(--text-secondary);">(All Paid)</span>
+                <p class="text-xs text-slate-400 mt-1">(All Paid)</p>
             {% endif %}
         </div>
     </div>
-</div>
 
-<!-- Sales Table -->
-<div class="content-section glass" style="padding: 1.5rem;">
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Product</th>
-                    <th>Client</th>
-                    <th>Quantity</th>
-                    <th>Price</th>
-                    <th>Total</th>
-                    <th>Cost</th>
-                    <th>Profit</th>
-                    <th>Type</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for sale in sales %}
-                <tr>
-                    <td>{{ sale.date|date:"Y-m-d H:i" }}</td>
-                    <td style="font-weight: 500;">{{ sale.product.name }}</td>
-                    <td>{{ sale.client.name|default:"-" }}</td>
-                    <td>{{ sale.quantity }}</td>
-                    <td>TZS {{ sale.price_at_sale|floatformat:2|intcomma }}</td>
-                    <td style="font-weight: 600;">TZS {{ sale.total_price|floatformat:2|intcomma }}</td>
-                    <td style="color: var(--text-secondary);">TZS {{ sale.total_cost|floatformat:2|intcomma }}</td>
-                    <td style="{% if sale.profit >= 0 %}color: var(--accent-color);{% else %}color: var(--danger);{% endif %} font-weight: 600;">
-                        TZS {{ sale.profit|floatformat:2|intcomma }}
-                    </td>
-                    <td>
-                        <span class="{% if sale.is_credit %}text-warning{% else %}text-success{% endif %}"
-                            style="font-size: 0.85rem; padding: 0.25rem 0.5rem; border-radius: 4px;">
-                            {% if sale.is_credit %}Credit{% else %}Cash{% endif %}
-                        </span>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="9" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
-                        No sales found for the selected period.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="table-container overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] uppercase font-bold tracking-widest">
+                    <tr>
+                        <th class="px-6 py-4 whitespace-nowrap">Date</th>
+                        <th class="px-6 py-4 whitespace-nowrap">Product</th>
+                        <th class="px-6 py-4 whitespace-nowrap">Client</th>
+                        <th class="px-6 py-4 whitespace-nowrap text-center">Qty</th>
+                        <th class="px-6 py-4 whitespace-nowrap text-right">Price</th>
+                        <th class="px-6 py-4 whitespace-nowrap text-right">Total</th>
+                        <th class="px-6 py-4 whitespace-nowrap text-right">Cost</th>
+                        <th class="px-6 py-4 whitespace-nowrap text-right">Profit</th>
+                        <th class="px-6 py-4 whitespace-nowrap text-center">Type</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for sale in sales %}
+                    <tr class="hover:bg-slate-50 transition group">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <p class="font-semibold text-slate-800 text-sm">{{ sale.date|date:"M d, Y" }}</p>
+                            <p class="text-xs text-slate-500">{{ sale.date|time:"H:i" }}</p>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <p class="font-semibold text-slate-800 text-sm">{{ sale.product.name }}</p>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                            {{ sale.client.name|default:"-" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-700 text-center">
+                            {{ sale.quantity }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 text-right">
+                            TZS {{ sale.price_at_sale|floatformat:2|intcomma }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 text-right">
+                            TZS {{ sale.total_price|floatformat:2|intcomma }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 text-right">
+                            TZS {{ sale.total_cost|floatformat:2|intcomma }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-right {% if sale.profit >= 0 %}text-emerald-600{% else %}text-red-600{% endif %}">
+                            TZS {{ sale.profit|floatformat:2|intcomma }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            {% if sale.is_credit %}
+                                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-lg text-xs font-bold">Credit</span>
+                            {% else %}
+                                <span class="px-2 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-bold">Cash</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="px-6 py-10 text-center text-slate-500 text-sm">
+                            <div class="flex flex-col items-center justify-center">
+                                <i data-lucide="bar-chart-2" class="w-12 h-12 text-slate-300 mb-3"></i>
+                                <p>No sales found for the selected period.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if is_paginated %}
+        <div class="px-6 py-4 border-t border-slate-100 bg-slate-50">
+            {% include 'shop/pagination.html' %}
+        </div>
+        {% endif %}
     </div>
 </div>
-
-<!-- Pagination -->
-{% if is_paginated %}
-<div style="margin-top: 2rem; display: flex; justify-content: center;">
-    {% include 'shop/pagination.html' %}
-</div>
-{% endif %}
 {% endblock %}

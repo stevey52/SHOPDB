@@ -4,24 +4,28 @@
 {% block header_title %}Delete Product{% endblock %}
 
 {% block content %}
-<div class="content-section glass" style="padding: 2rem; max-width: 600px; margin: 0 auto; text-align: center;">
-    <div style="margin-bottom: 2rem;">
-        <i data-lucide="alert-triangle"
-            style="width: 64px; height: 64px; color: var(--text-danger); margin-bottom: 1rem;"></i>
-        <h3 style="color: white; margin-bottom: 1rem;">Are you sure?</h3>
-        <p style="color: var(--text-secondary); line-height: 1.6;">
+<div class="max-w-xl mx-auto">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden text-center p-8">
+        <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center text-red-600 mx-auto mb-6">
+            <i data-lucide="alert-triangle" class="w-10 h-10"></i>
+        </div>
+        
+        <h3 class="text-2xl font-bold text-slate-800 mb-4">Are you sure?</h3>
+        
+        <p class="text-slate-600 mb-8 leading-relaxed">
             You are about to delete <strong>"{{ object.name }}"</strong>. This action cannot be undone and will also
             remove all associated history and sales records.
         </p>
-    </div>
 
-    <form method="post">
-        {% csrf_token %}
-        <div style="display: flex; gap: 1rem; justify-content: center;">
-            <button type="submit" class="btn btn-danger" style="flex: 1; min-width: 140px;">Delete Product</button>
-            <a href="{% url 'product_list' %}" class="btn glass"
-                style="flex: 1; min-width: 140px; text-align: center; text-decoration: none; color: white;">Cancel</a>
-        </div>
-    </form>
+        <form method="post" class="flex flex-col sm:flex-row gap-4 justify-center">
+            {% csrf_token %}
+            <button type="submit" class="bg-red-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-red-700 transition shadow-sm w-full sm:w-auto">
+                Delete Product
+            </button>
+            <a href="{% url 'product_list' %}" class="bg-slate-100 text-slate-700 px-8 py-3 rounded-xl font-semibold hover:bg-slate-200 transition shadow-sm w-full sm:w-auto text-center">
+                Cancel
+            </a>
+        </form>
+    </div>
 </div>
 {% endblock %}

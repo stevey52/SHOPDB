@@ -4,28 +4,34 @@
 {% block header_title %}Delete Sale{% endblock %}
 
 {% block content %}
-<div class="content-section glass" style="padding: 2rem; max-width: 600px; margin: 0 auto;">
-    <h3 style="color: var(--text-danger); margin-bottom: 1rem;">Confirm Deletion</h3>
-    <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">
-        Are you sure you want to delete the sale of
-        <strong>{{ object.product.name }}</strong> recorded on
-        {{ object.date|date:"Y-m-d H:i" }}?
-    </p>
-
-    <div class="alert glass"
-        style="border-color: var(--warning); color: var(--warning); padding: 1rem; margin-bottom: 1.5rem;">
-        <i data-lucide="alert-triangle" style="vertical-align: middle; width: 18px; margin-right: 5px;"></i>
-        <strong>Warning:</strong> This will restore
-        {{ object.quantity }} units to the product stock and record a financial reversal.
-    </div>
-
-    <form method="post">
-        {% csrf_token %}
-        <div style="display: flex; gap: 1rem;">
-            <button type="submit" class="btn btn-danger">Confirm Delete</button>
-            <a href="{% url 'sales_history' %}" class="btn glass"
-                style="color: white; text-decoration: none;">Cancel</a>
+<div class="max-w-xl mx-auto">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden text-center p-8">
+        <div class="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center text-red-600 mx-auto mb-6">
+            <i data-lucide="alert-triangle" class="w-10 h-10"></i>
         </div>
-    </form>
+        
+        <h3 class="text-2xl font-bold text-slate-800 mb-4">Confirm Deletion</h3>
+        
+        <p class="text-slate-600 mb-6 leading-relaxed">
+            Are you sure you want to delete the sale of
+            <strong>{{ object.product.name }}</strong> recorded on
+            {{ object.date|date:"Y-m-d H:i" }}?
+        </p>
+
+        <div class="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl text-sm mb-8 flex items-start gap-3 text-left">
+            <i data-lucide="info" class="w-5 h-5 flex-shrink-0 mt-0.5"></i>
+            <p><strong>Warning:</strong> This will restore {{ object.quantity }} units to the product stock and record a financial reversal.</p>
+        </div>
+
+        <form method="post" class="flex flex-col sm:flex-row gap-4 justify-center">
+            {% csrf_token %}
+            <button type="submit" class="bg-red-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-red-700 transition shadow-sm w-full sm:w-auto">
+                Confirm Delete
+            </button>
+            <a href="{% url 'sales_history' %}" class="bg-slate-100 text-slate-700 px-8 py-3 rounded-xl font-semibold hover:bg-slate-200 transition shadow-sm w-full sm:w-auto text-center">
+                Cancel
+            </a>
+        </form>
+    </div>
 </div>
 {% endblock %}

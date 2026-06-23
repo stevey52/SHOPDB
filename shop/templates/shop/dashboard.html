@@ -5,133 +5,185 @@
 {% block header_title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="stats-grid">
-    <div class="stat-card glass">
-        <div class="stat-label">Total Products</div>
-        <div class="stat-value">{{ total_products|intcomma }}</div>
-    </div>
-    <div class="stat-card glass">
-        <div class="stat-label">Low Stock</div>
-        <div class="stat-value text-danger">{{ low_stock|intcomma }}</div>
-    </div>
-    {% if is_manager %}
-    <div class="stat-card glass">
-        <div class="stat-label">Total Income</div>
-        <div class="stat-value text-success">TZS {{ total_income|floatformat:2|intcomma }}</div>
-    </div>
-    <div class="stat-card glass">
-        <div class="stat-label">Total Expense</div>
-        <div class="stat-value text-danger">TZS {{ total_expense|floatformat:2|intcomma }}</div>
-    </div>
-    <div class="stat-card glass">
-        <div class="stat-label">Balance</div>
-        <div class="stat-value {% if balance >= 0 %}text-success{% else %}text-danger{% endif %}">
-            TZS {{ balance|floatformat:2|intcomma }}
-        </div>
-    </div>
-    <div class="stat-card glass">
-        <div class="stat-label">Total Debt Owed</div>
-        <div class="stat-value text-danger">TZS {{ total_debt|floatformat:2|intcomma }}</div>
-    </div>
-    {% endif %}
-</div>
+<div class="space-y-8">
 
-{% if is_manager %}
-<div class="content-section glass" style="padding: 1rem; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-color);">
-    <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
-        <i data-lucide="info" style="color: var(--accent-color); width: 20px; height: 20px; flex-shrink: 0;"></i>
+    <!-- STATS CARDS -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+        
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
+            <div class="flex justify-between items-start">
+                <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+                    <i data-lucide="package" class="w-4 h-4 text-indigo-500"></i> Total Products
+                </p>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800 mt-3">{{ total_products|intcomma }}</h3>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
+            <div class="flex justify-between items-start">
+                <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+                    <i data-lucide="alert-triangle" class="w-4 h-4 text-red-500"></i> Low Stock
+                </p>
+            </div>
+            <h3 class="text-2xl font-bold text-red-600 mt-3">{{ low_stock|intcomma }}</h3>
+        </div>
+
+        {% if is_manager %}
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
+            <div class="flex justify-between items-start">
+                <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+                    <i data-lucide="trending-up" class="w-4 h-4 text-green-500"></i> Total Income
+                </p>
+            </div>
+            <h3 class="text-2xl font-bold text-green-600 mt-3"><span class="text-sm font-medium text-slate-500">TZS</span> {{ total_income|floatformat:2|intcomma }}</h3>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
+            <div class="flex justify-between items-start">
+                <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+                    <i data-lucide="trending-down" class="w-4 h-4 text-red-500"></i> Total Expense
+                </p>
+            </div>
+            <h3 class="text-2xl font-bold text-red-600 mt-3"><span class="text-sm font-medium text-slate-500">TZS</span> {{ total_expense|floatformat:2|intcomma }}</h3>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
+            <div class="flex justify-between items-start">
+                <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+                    <i data-lucide="scale" class="w-4 h-4 text-blue-500"></i> Balance
+                </p>
+            </div>
+            <h3 class="text-2xl font-bold {% if balance >= 0 %}text-blue-600{% else %}text-red-600{% endif %} mt-3">
+                <span class="text-sm font-medium text-slate-500">TZS</span> {{ balance|floatformat:2|intcomma }}
+            </h3>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition">
+            <div class="flex justify-between items-start">
+                <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+                    <i data-lucide="users" class="w-4 h-4 text-orange-500"></i> Total Debt Owed
+                </p>
+            </div>
+            <h3 class="text-2xl font-bold text-orange-600 mt-3"><span class="text-sm font-medium text-slate-500">TZS</span> {{ total_debt|floatformat:2|intcomma }}</h3>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if is_manager %}
+    <!-- INFO ALERT -->
+    <div class="bg-blue-50 border border-blue-200 rounded-2xl p-5 flex gap-4">
+        <i data-lucide="info" class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5"></i>
         <div>
-            <h4 style="margin: 0 0 0.5rem 0; color: var(--text-secondary); font-size: 0.9rem;">Understanding Income vs Revenue</h4>
-            <p style="margin: 0; color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4;">
+            <h4 class="text-blue-800 font-semibold mb-1">Understanding Income vs Revenue</h4>
+            <p class="text-blue-700 text-sm">
                 <strong>Total Income</strong> tracks actual cash received (including credit sale down-payments).<br>
                 <strong>Total Revenue</strong> (in Profit Report) shows full sale values regardless of payment method.<br>
-                <span style="color: var(--accent-color);">Difference may include credit sales balances and manual income entries.</span>
+                <span class="text-blue-600 italic">Difference may include credit sales balances and manual income entries.</span>
             </p>
         </div>
     </div>
-</div>
 
-<div class="content-section glass" style="padding: 1.5rem;">
-    <h3>Sales & Profit Trends (Last 7 Days)</h3>
-    <div style="height: 400px; margin-top: 1.5rem;">
-        <canvas id="performanceChart"></canvas>
+    <!-- CHARTS -->
+    <div class="grid grid-cols-1 gap-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-bold text-slate-800">Sales & Profit Trends (Last 7 Days)</h3>
+            </div>
+            <div class="relative h-80 w-full">
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
     </div>
-</div>
-{% else %}
-<div class="content-section glass" style="padding: 1.5rem; text-align: center;">
-    <h3>Welcome, {{ user.username }}!</h3>
-    <p style="color: var(--text-secondary); margin-top: 1rem;">Ready to make some sales?</p>
-    <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: center;">
-        <a href="{% url 'sale_create' %}" class="btn btn-primary">
-            <i data-lucide="shopping-cart" style="vertical-align: middle; width: 18px; margin-right: 5px;"></i> New Sale
-        </a>
-        <a href="{% url 'product_list' %}" class="btn glass" style="color: white; text-decoration: none;">
-            <i data-lucide="package" style="vertical-align: middle; width: 18px; margin-right: 5px;"></i> View Products
-        </a>
+    {% else %}
+    <!-- CASHIER WELCOME VIEW -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 text-center">
+        <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="user" class="w-8 h-8"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-slate-800">Welcome, {{ user.username|title }}!</h3>
+        <p class="text-slate-500 mt-2 mb-8">Ready to make some sales?</p>
+        
+        <div class="flex justify-center gap-4">
+            <a href="{% url 'sale_create' %}" class="bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition shadow-sm shadow-indigo-200 flex items-center gap-2">
+                <i data-lucide="shopping-cart" class="w-5 h-5"></i> New Sale
+            </a>
+            <a href="{% url 'product_list' %}" class="bg-white text-slate-700 border border-slate-200 px-6 py-3 rounded-xl font-semibold hover:bg-slate-50 transition shadow-sm flex items-center gap-2">
+                <i data-lucide="package" class="w-5 h-5"></i> View Products
+            </a>
+        </div>
     </div>
+    {% endif %}
+
 </div>
-{% endif %}
+{% endblock %}
 
 {% block extra_js %}
 {% if is_manager %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const ctx = document.getElementById('performanceChart').getContext('2d');
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: {{ chart_labels| safe }},
-        datasets: [{
-            label: 'Sales (TZS)',
-            data: {{ chart_sales| safe }},
-        borderColor: '#38bdf8',
-        backgroundColor: 'rgba(56, 189, 248, 0.1)',
-        borderWidth: 3,
-        tension: 0.4,
-        fill: true
-        }, {
-            label: 'Profit (TZS)',
-            data: {{ chart_profit| safe }},
-        borderColor: '#10b981',
-        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-        borderWidth: 3,
-        tension: 0.4,
-        fill: true
-        }, {
-            label: 'Expenses (TZS)',
-            data: {{ chart_expenses| safe }},
-        borderColor: '#f43f5e',
-        backgroundColor: 'rgba(244, 63, 94, 0.1)',
-        borderWidth: 3,
-        tension: 0.4,
-        fill: true
-        }]
-    },
+            labels: {{ chart_labels|safe }},
+            datasets: [{
+                label: 'Sales (TZS)',
+                data: {{ chart_sales|safe }},
+                borderColor: '#4f46e5',
+                backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                pointRadius: 4,
+                pointBackgroundColor: '#4f46e5'
+            }, {
+                label: 'Profit (TZS)',
+                data: {{ chart_profit|safe }},
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                pointRadius: 4,
+                pointBackgroundColor: '#10b981'
+            }, {
+                label: 'Expenses (TZS)',
+                data: {{ chart_expenses|safe }},
+                borderColor: '#f43f5e',
+                backgroundColor: 'rgba(244, 63, 94, 0.1)',
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                pointRadius: 4,
+                pointBackgroundColor: '#f43f5e'
+            }]
+        },
         options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                labels: {
-                    color: '#94a3b8',
-                    font: { family: 'Inter' }
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#64748b',
+                        font: { family: 'Inter', size: 13 },
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f1f5f9', borderDash: [5, 5] },
+                    ticks: { color: '#64748b', font: { family: 'Inter' } }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#64748b', font: { family: 'Inter' } }
                 }
             }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                ticks: { color: '#94a3b8' }
-            },
-            x: {
-                grid: { display: false },
-                ticks: { color: '#94a3b8' }
-            }
         }
-    }
     });
 </script>
 {% endif %}
-{% endblock %}
 {% endblock %}

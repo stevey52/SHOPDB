@@ -5,114 +5,128 @@
 {% block header_title %}Expenses Report{% endblock %}
 
 {% block content %}
-<div class="content-header"
-    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-    <h3 style="color: var(--text-secondary);">Expenses Report</h3>
-    <div style="display: flex; gap: 1rem;">
-        <a href="{% url 'dashboard' %}" class="btn glass" style="color: white; text-decoration: none;">
-            <i data-lucide="home" style="width: 16px; height: 16px; margin-right: 5px;"></i> Dashboard
-        </a>
-        <a href="{% url 'money_journal' %}" class="btn glass" style="color: white; text-decoration: none;">
-            <i data-lucide="book-open" style="width: 16px; height: 16px; margin-right: 5px;"></i> Money Journal
-        </a>
-    </div>
-</div>
-
-<!-- Date Filter Form -->
-<div class="content-section glass" style="padding: 1.5rem; margin-bottom: 1.5rem;">
-    <form method="get" style="display: flex; gap: 1rem; align-items: end; flex-wrap: wrap;">
-        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <label style="color: var(--text-secondary); font-size: 0.9rem;">Start Date</label>
-            <input type="date" name="start_date" value="{{ start_date }}" class="glass"
-                style="padding: 0.5rem; color: white; border-color: var(--glass-border);">
+<div class="space-y-6">
+    <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
+        <form method="GET" class="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <span class="text-sm text-slate-500 hidden sm:inline">From</span>
+                <input type="date" name="start_date" value="{{ start_date }}" class="px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition w-full sm:w-auto">
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <span class="text-sm text-slate-500 hidden sm:inline">To</span>
+                <input type="date" name="end_date" value="{{ end_date }}" class="px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition w-full sm:w-auto">
+            </div>
+            
+            <div class="flex gap-2">
+                <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition shadow-sm whitespace-nowrap">Filter</button>
+                <a href="{% url 'expenses_report' %}" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-slate-200 transition flex items-center justify-center whitespace-nowrap">Clear</a>
+            </div>
+        </form>
+        
+        <div class="flex gap-3 w-full xl:w-auto">
+            <a href="{% url 'dashboard' %}" class="bg-white text-slate-700 border border-slate-200 px-6 py-2.5 rounded-xl font-semibold hover:bg-slate-50 transition flex items-center justify-center gap-2 w-full sm:w-auto flex-shrink-0 shadow-sm">
+                <i data-lucide="home" class="w-5 h-5 text-indigo-600"></i> Dashboard
+            </a>
+            <a href="{% url 'money_journal' %}" class="bg-white text-slate-700 border border-slate-200 px-6 py-2.5 rounded-xl font-semibold hover:bg-slate-50 transition flex items-center justify-center gap-2 w-full sm:w-auto flex-shrink-0 shadow-sm">
+                <i data-lucide="book-open" class="w-5 h-5 text-indigo-600"></i> Money Journal
+            </a>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <label style="color: var(--text-secondary); font-size: 0.9rem;">End Date</label>
-            <input type="date" name="end_date" value="{{ end_date }}" class="glass"
-                style="padding: 0.5rem; color: white; border-color: var(--glass-border);">
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <span class="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Expenses</span>
+            <h3 class="text-3xl font-bold mt-2 text-red-600">TZS {{ total_expenses|floatformat:2|intcomma }}</h3>
         </div>
-        <div style="display: flex; gap: 0.5rem;">
-            <button type="submit" class="btn btn-primary">Filter</button>
-            <a href="{% url 'expenses_report' %}" class="btn glass" style="color: white; text-decoration: none;">Clear</a>
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <span class="text-sm font-medium text-slate-500 uppercase tracking-wider">Number of Entries</span>
+            <h3 class="text-3xl font-bold mt-2 text-slate-800">{{ expense_count|intcomma }}</h3>
         </div>
-    </form>
-</div>
-
-<!-- Summary Statistics -->
-<div class="stats-grid" style="margin-bottom: 2rem;">
-    <div class="stat-card glass">
-        <div class="stat-label">Total Expenses</div>
-        <div class="stat-value text-danger">TZS {{ total_expenses|floatformat:2|intcomma }}</div>
-    </div>
-    <div class="stat-card glass">
-        <div class="stat-label">Number of Entries</div>
-        <div class="stat-value">{{ expense_count|intcomma }}</div>
-    </div>
-    <div class="stat-card glass">
-        <div class="stat-label">Average Expense</div>
-        <div class="stat-value text-warning">TZS {% if expense_count > 0 %}{{ average_expense|floatformat:2|intcomma }}{% else %}0{% endif %}</div>
-    </div>
-</div>
-
-<!-- Category Breakdown -->
-{% if category_totals %}
-<div class="content-section glass" style="padding: 1.5rem; margin-bottom: 2rem;">
-    <h3 style="margin-bottom: 1rem;">Expenses by Category</h3>
-    <div class="stats-grid">
-        {% for category, amount in category_totals.items %}
-        <div class="stat-card glass">
-            <div class="stat-label">{{ category }}</div>
-            <div class="stat-value text-danger">TZS {{ amount|floatformat:2|intcomma }}</div>
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <span class="text-sm font-medium text-slate-500 uppercase tracking-wider">Average Expense</span>
+            <h3 class="text-3xl font-bold mt-2 text-yellow-600">TZS {% if expense_count > 0 %}{{ average_expense|floatformat:2|intcomma }}{% else %}0{% endif %}</h3>
         </div>
-        {% endfor %}
+    </div>
+
+    <!-- Category Breakdown -->
+    {% if category_totals %}
+    <div>
+        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+            <i data-lucide="pie-chart" class="w-5 h-5 text-indigo-600"></i>
+            Expenses by Category
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {% for category, amount in category_totals.items %}
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-indigo-200 transition">
+                <span class="text-sm font-semibold text-slate-600 truncate" title="{{ category }}">{{ category }}</span>
+                <h4 class="text-lg font-bold mt-1 text-red-600">TZS {{ amount|floatformat:2|intcomma }}</h4>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Expenses Table -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+        <div class="p-6 border-b border-slate-100 flex items-center gap-3">
+            <div class="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center text-red-600">
+                <i data-lucide="list" class="w-5 h-5"></i>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800">Expense Details</h3>
+        </div>
+        <div class="overflow-x-auto flex-grow">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] uppercase font-bold tracking-widest">
+                    <tr>
+                        <th class="px-6 py-4 whitespace-nowrap">Date</th>
+                        <th class="px-6 py-4 whitespace-nowrap">Category</th>
+                        <th class="px-6 py-4">Description</th>
+                        <th class="px-6 py-4 whitespace-nowrap text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for expense in expenses %}
+                    <tr class="hover:bg-slate-50 transition group">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <p class="font-semibold text-slate-800 text-sm">{{ expense.date|date:"M d, Y" }}</p>
+                            <p class="text-xs text-slate-500">{{ expense.date|time:"H:i" }}</p>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if expense.category %}
+                                <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-semibold">
+                                    {{ expense.category.name }}
+                                </span>
+                            {% else %}
+                                <span class="text-xs text-slate-400 italic">Uncategorized</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-slate-600">
+                            {{ expense.description|default:"-" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-red-600">
+                            TZS {{ expense.amount|floatformat:2|intcomma }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-10 text-center text-slate-500 text-sm">
+                            <div class="flex flex-col items-center justify-center">
+                                <i data-lucide="receipt" class="w-12 h-12 text-slate-300 mb-3"></i>
+                                <p>No expenses found for the selected period.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if is_paginated %}
+        <div class="px-6 py-4 border-t border-slate-100 bg-slate-50">
+            {% include 'shop/pagination.html' %}
+        </div>
+        {% endif %}
     </div>
 </div>
-{% endif %}
-
-<!-- Expenses Table -->
-<div class="content-section glass" style="padding: 1.5rem;">
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Category</th>
-                    <th>Description</th>
-                    <th>Amount</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for expense in expenses %}
-                <tr>
-                    <td>{{ expense.date|date:"Y-m-d H:i" }}</td>
-                    <td>
-                        {% if expense.category %}
-                            <span style="padding: 0.25rem 0.5rem; background: var(--glass-border); border-radius: 4px; font-size: 0.85rem;">
-                                {{ expense.category.name }}
-                            </span>
-                        {% else %}
-                            <span style="color: var(--text-secondary);">Uncategorized</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ expense.description|default:"-" }}</td>
-                    <td style="font-weight: 600; color: var(--danger);">TZS {{ expense.amount|floatformat:2|intcomma }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
-                        No expenses found for the selected period.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- Pagination -->
-{% if is_paginated %}
-<div style="margin-top: 2rem; display: flex; justify-content: center;">
-    {% include 'shop/pagination.html' %}
-</div>
-{% endif %}
 {% endblock %}

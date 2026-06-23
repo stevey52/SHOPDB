@@ -1,58 +1,104 @@
 {% extends 'shop/base.html' %}
+
 {% block title %}Record Payment - BOMBA MOTORS{% endblock %}
 {% block header_title %}Record Debt Payment{% endblock %}
+
 {% block content %}
-<div class="form-container glass" style="max-width: 600px; margin: 0 auto; padding: 2.5rem; border-radius: 12px;">
-    <form method="POST">
-        {% csrf_token %}
-        <div style="margin-bottom: 2rem;">
-            <label style="display: block; margin-bottom: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7);">Client</label>
-            {{ form.client }}
-            {% if form.client.errors %}
-            <div class="text-danger" style="margin-top: 0.5rem; font-size: 0.9rem;">{{ form.client.errors }}</div>
-            {% endif %}
-            {% if client %}
-            {% if client.total_debt > 0 %}
-            <div style="margin-top: 1rem; padding: 0.85rem 1.2rem; border-radius: 8px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239,68,68,0.4);">
-                <span style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">Outstanding Balance for <strong>{{ client.name }}</strong>:</span>
-                <span style="font-weight: 700; font-size: 1.1rem; margin-left: 0.75rem; color: #f87171;">TZS {{ client.total_debt|floatformat:2 }}</span>
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center gap-3">
+            <div class="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600">
+                <i data-lucide="plus" class="w-5 h-5"></i>
             </div>
-            {% else %}
-            <div style="margin-top: 1rem; padding: 0.85rem 1.2rem; border-radius: 8px; background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74,222,128,0.3);">
-                <span style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">Outstanding Balance for <strong>{{ client.name }}</strong>:</span>
-                <span style="font-weight: 700; font-size: 1.1rem; margin-left: 0.75rem; color: #4ade80;">TZS {{ client.total_debt|floatformat:2 }}</span>
-                <p style="margin: 0.5rem 0 0; font-size: 0.75rem; color: rgba(255,255,255,0.4);">This client has no outstanding debt. Please verify this payment is needed.</p>
-            </div>
-            {% endif %}
-            {% endif %}
+            <h3 class="text-lg font-bold text-slate-800">Record New Payment</h3>
         </div>
-        <div style="margin-bottom: 2rem;">
-            <label style="display: block; margin-bottom: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7);">Date</label>
-            {{ form.date }}
-            {% if form.date.errors %}
-            <div class="text-danger" style="margin-top: 0.5rem; font-size: 0.9rem;">{{ form.date.errors }}</div>
-            {% endif %}
+        
+        <div class="p-6">
+            <form method="POST" class="space-y-5">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                <div class="bg-red-50 text-red-700 p-4 rounded-xl text-sm mb-4 border border-red-200">
+                    <p class="font-bold mb-1">Please correct the errors below:</p>
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Client</label>
+                    <div class="relative">
+                        <select name="client" required class="w-full pl-4 pr-10 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition appearance-none bg-white">
+                            {% for option in form.client %}
+                                {{ option }}
+                            {% endfor %}
+                        </select>
+                        <i data-lucide="chevron-down" class="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                    </div>
+                    {% if form.client.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.client.errors.0 }}</p>
+                    {% endif %}
+
+                    {% if client %}
+                        {% if client.total_debt > 0 %}
+                        <div class="mt-3 p-4 rounded-xl bg-red-50 border border-red-100 flex items-center gap-3">
+                            <i data-lucide="alert-circle" class="w-5 h-5 text-red-500"></i>
+                            <div>
+                                <span class="text-sm text-red-600">Outstanding Balance for <strong>{{ client.name }}</strong>:</span>
+                                <span class="font-bold text-lg text-red-700 ml-2">TZS {{ client.total_debt|floatformat:2 }}</span>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="mt-3 p-4 rounded-xl bg-green-50 border border-green-100 flex items-start gap-3">
+                            <i data-lucide="check-circle" class="w-5 h-5 text-green-500 mt-0.5"></i>
+                            <div>
+                                <span class="text-sm text-green-600">Outstanding Balance for <strong>{{ client.name }}</strong>:</span>
+                                <span class="font-bold text-lg text-green-700 ml-2">TZS {{ client.total_debt|floatformat:2 }}</span>
+                                <p class="mt-1 text-xs text-green-600/70">This client has no outstanding debt. Please verify this payment is needed.</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Date</label>
+                        <input type="date" name="date" value="{{ form.date.value|default:'' }}" required class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                        {% if form.date.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.date.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Payment Amount (TZS)</label>
+                        <input type="number" step="0.01" name="amount" value="{{ form.amount.value|default:'' }}" required class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                        {% if form.amount.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.amount.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Notes / Reference (Optional)</label>
+                    <textarea name="notes" rows="3" class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition">{{ form.notes.value|default:'' }}</textarea>
+                    {% if form.notes.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.notes.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-3 pt-4">
+                    <button type="submit" class="w-full sm:w-auto flex-1 bg-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-indigo-700 transition flex items-center justify-center gap-2 shadow-sm">
+                        <i data-lucide="save" class="w-5 h-5"></i> Record Payment
+                    </button>
+                    <a href="{% url 'client_list' %}" class="w-full sm:w-auto flex-1 bg-white text-slate-700 border border-slate-200 px-6 py-3 rounded-xl font-semibold hover:bg-slate-50 transition flex items-center justify-center gap-2 shadow-sm">
+                        Cancel
+                    </a>
+                </div>
+            </form>
         </div>
-        <div style="margin-bottom: 2rem;">
-            <label style="display: block; margin-bottom: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7);">Payment Amount (TZS)</label>
-            {{ form.amount }}
-            {% if form.amount.errors %}
-            <div class="text-danger" style="margin-top: 0.5rem; font-size: 0.9rem;">{{ form.amount.errors }}</div>
-            {% endif %}
-        </div>
-        <div style="margin-bottom: 2.5rem;">
-            <label style="display: block; margin-bottom: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7);">Notes / Reference (Optional)</label>
-            {{ form.notes }}
-            {% if form.notes.errors %}
-            <div class="text-danger" style="margin-top: 0.5rem; font-size: 0.9rem;">{{ form.notes.errors }}</div>
-            {% endif %}
-        </div>
-        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-            <button type="submit" class="btn btn-primary" style="flex: 1; padding: 1rem; font-weight: 600; border-radius: 8px;">Record Payment</button>
-            <a href="{% url 'client_list' %}" class="btn glass" style="flex: 1; text-align: center; text-decoration: none; padding: 1rem; color: white; border-radius: 8px;">Back to Clients</a>
-        </div>
-    </form>
+    </div>
 </div>
+
 {% if request.GET.client %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {

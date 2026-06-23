@@ -82,6 +82,7 @@ class InventoryMovement(models.Model):
     ]
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='movements')
     sale = models.ForeignKey('Sale', on_delete=models.CASCADE, null=True, blank=True, related_name='inventory_movements')
+    invoice = models.ForeignKey('Invoice', on_delete=models.CASCADE, null=True, blank=True, related_name='inventory_movements')
     movement_type = models.CharField(max_length=3, choices=MOVEMENT_TYPES)
     quantity = models.IntegerField()
     remaining_quantity = models.IntegerField(default=0)  # Available quantity left in this batch
@@ -109,6 +110,10 @@ class Client(models.Model):
         # Calculate total debt: Sum of (total_price - amount_paid) for credit sales - sum of payments
         credit_sales = [s for s in self.sales.all() if s.is_credit]
         unpaid_amount = sum(s.total_price - s.amount_paid for s in credit_sales)
+        
+        credit_invoices = [i for i in getattr(self, 'invoices').all() if i.is_credit] if hasattr(self, 'invoices') else []
+        unpaid_amount += sum(i.total_price - i.amount_paid for i in credit_invoices)
+        
         payments_total = sum(p.amount for p in self.debt_payments.all())
         return unpaid_amount - payments_total
 
@@ -151,6 +156,75 @@ class Sale(models.Model):
     def __str__(self):
         return f"Sale: {self.product.name} x {self.quantity}"
 
+class Invoice(models.Model):
+    client = models.ForeignKey(Client, on_delete=models.SET_NULL, null=True, blank=True, related_name='invoices')
+    date = models.DateTimeField(default=timezone.now)
+    is_credit = models.BooleanField(default=False)
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    notes = models.TextField(null=True, blank=True)
+
+    @property
+    def total_price(self):
+        return sum(item.total_price for item in self.items.all())
+
+    @property
+    def total_cost(self):
+        return sum(item.total_cost for item in self.items.all())
+
+    @property
+    def profit(self):
+        return self.total_price - self.total_cost
+
+    @property
+    def balance_due(self):
+        if self.is_credit:
+            return self.total_price - self.amount_paid
+        return 0
+
+    def __str__(self):
+        client_name = self.client.name if self.client else "Walk-in"
+        return f"Invoice {self.id} - {client_name}"
+
+class SaleItem(models.Model):
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.IntegerField()
+    price_at_sale = models.DecimalField(max_digits=10, decimal_places=2)
+    cost_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    @property
+    def total_price(self):
+        return self.quantity * self.price_at_sale
+
+    @property
+    def total_cost(self):
+        if self.cost_price:
+            return self.quantity * self.cost_price
+        return 0
+
+    @property
+    def profit(self):
+        return self.total_price - self.total_cost
+
+    @property
+    def date(self):
+        return self.invoice.date
+
+    @property
+    def client(self):
+        return self.invoice.client
+
+    @property
+    def is_credit(self):
+        return self.invoice.is_credit
+
+    @property
+    def amount_paid(self):
+        return 0
+
+    def __str__(self):
+        return f"Item: {self.product.name} x {self.quantity}"
+
 class DebtPayment(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='debt_payments')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
@@ -177,6 +251,7 @@ class MoneyJournal(models.Model):
     description = models.TextField(null=True, blank=True)
     category = models.ForeignKey(ExpenseCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name='expenses')
     sale = models.ForeignKey(Sale, on_delete=models.CASCADE, null=True, blank=True, related_name='journal_entries')
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, null=True, blank=True, related_name='journal_entries')
     debt_payment = models.ForeignKey(DebtPayment, on_delete=models.CASCADE, null=True, blank=True, related_name='journal_entries')
 
     def __str__(self):

@@ -31,4 +31,8 @@ urlpatterns = [
     path('debts/add/', views.DebtPaymentCreateView.as_view(), name='debt_payment_create'),
     path('debts/<int:pk>/delete/', views.DebtPaymentDeleteView.as_view(), name='debt_payment_delete'),
     path('products/<int:pk>/quick-stock/', views.quick_stock_update, name='quick_stock_update'),
+    path('invoices/', views.InvoiceListView.as_view(), name='invoice_list'),
+    path('invoices/new/', views.InvoiceCreateView.as_view(), name='invoice_create'),
+    path('invoices/<int:pk>/delete/', views.InvoiceDeleteView.as_view(), name='invoice_delete'),
+    path('invoices/<int:pk>/receipt/', views.InvoiceReceiptPDFView.as_view(), name='invoice_receipt_pdf'),
 ]

@@ -4,103 +4,101 @@
 {% block header_title %}Profitability Report{% endblock %}
 
 {% block content %}
-<!-- Date Filter Form -->
-<div class="content-section glass" style="padding: 1.5rem; margin-bottom: 2rem;">
-    <form method="get" style="display: flex; gap: 1rem; align-items: end; flex-wrap: wrap;">
-        <div style="flex: 1; min-width: 150px;">
-            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">Start Date</label>
-            <input type="date" name="start_date" value="{{ start_date }}" class="glass"
-                style="width: 100%; padding: 0.5rem; color: white; border-color: var(--glass-border);">
-        </div>
-        <div style="flex: 1; min-width: 150px;">
-            <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">End Date</label>
-            <input type="date" name="end_date" value="{{ end_date }}" class="glass"
-                style="width: 100%; padding: 0.5rem; color: white; border-color: var(--glass-border);">
-        </div>
-        <div style="display: flex; gap: 0.5rem;">
-            <button type="submit" class="btn btn-primary">Filter</button>
-            <a href="{% url 'profit_report' %}" class="btn glass" style="text-decoration: none; color: white;">Clear</a>
-        </div>
-    </form>
-</div>
-
-<div class="content-header"
-    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-    <h3 style="color: var(--text-secondary);">Product Performance</h3>
-</div>
-
-<div class="stats-grid" style="margin-bottom: 2rem;">
-    <div class="stat-card glass">
-        <div class="stat-label">Total Revenue</div>
-        <div class="stat-value text-success">TZS {{ total_revenue_sum }}</div>
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <form method="GET" class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <span class="text-sm text-slate-500 hidden sm:inline">From</span>
+                <input type="date" name="start_date" value="{{ start_date }}" class="px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition w-full sm:w-auto">
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <span class="text-sm text-slate-500 hidden sm:inline">To</span>
+                <input type="date" name="end_date" value="{{ end_date }}" class="px-4 py-2 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition w-full sm:w-auto">
+            </div>
+            
+            <div class="flex gap-2">
+                <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition shadow-sm whitespace-nowrap">Filter</button>
+                <a href="{% url 'profit_report' %}" class="bg-slate-100 text-slate-600 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-slate-200 transition flex items-center justify-center whitespace-nowrap">Clear</a>
+            </div>
+        </form>
     </div>
-    <div class="stat-card glass">
-        <div class="stat-label">Total Net Profit</div>
-        <div class="stat-value text-success">TZS {{ total_profit_sum }}</div>
-    </div>
-</div>
 
-<div class="content-section glass" style="padding: 1.5rem;">
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Product Name</th>
-                    <th>Sold Qty</th>
-                    <th>Total Revenue</th>
-                    <th>Est. Total Cost</th>
-                    <th>Net Profit</th>
-                    <th>Margin</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in report_data %}
-                <tr>
-                    <td style="font-weight: 500;">{{ item.name }}</td>
-                    <td>{{ item.total_sold }}</td>
-                    <td>TZS {{ item.total_revenue }}</td>
-                    <td style="color: var(--text-secondary);">TZS {{ item.total_cost }}</td>
-                    <td style="font-weight: 600; color: var(--accent-color);">TZS {{ item.net_profit }}</td>
-                    <td>
-                        <span
-                            class="{% if item.margin >= 20 %}text-success{% elif item.margin >= 10 %}text-warning{% else %}text-danger{% endif %}">
-                            {{ item.margin }}%
-                        </span>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="6" style="text-align: center; color: var(--text-secondary);">No sales data available.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- Summary Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <span class="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Revenue</span>
+            <h3 class="text-3xl font-bold mt-2 text-indigo-600">TZS {{ total_revenue_sum }}</h3>
+        </div>
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <span class="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Net Profit</span>
+            <h3 class="text-3xl font-bold mt-2 text-emerald-600">TZS {{ total_profit_sum }}</h3>
+        </div>
     </div>
-</div>
 
-<!-- Pagination -->
-{% if is_paginated %}
-<div style="display: flex; justify-content: center; margin-top: 2rem;">
-    <div style="display: flex; gap: 0.5rem; align-items: center;">
-        {% if page_obj.has_previous %}
-            <a href="?page=1{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" 
-               class="btn glass" style="text-decoration: none; color: white; padding: 0.5rem 1rem;">&laquo; First</a>
-            <a href="?page={{ page_obj.previous_page_number }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" 
-               class="btn glass" style="text-decoration: none; color: white; padding: 0.5rem 1rem;">&lsaquo; Previous</a>
-        {% endif %}
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600">
+                    <i data-lucide="trending-up" class="w-5 h-5"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">Product Performance</h3>
+            </div>
+        </div>
+        <div class="overflow-x-auto flex-grow">
+            <table class="w-full text-left border-collapse">
+                <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] uppercase font-bold tracking-widest">
+                    <tr>
+                        <th class="px-6 py-4 whitespace-nowrap">Product Name</th>
+                        <th class="px-6 py-4 whitespace-nowrap text-center">Sold Qty</th>
+                        <th class="px-6 py-4 whitespace-nowrap text-right">Total Revenue</th>
+                        <th class="px-6 py-4 whitespace-nowrap text-right">Est. Total Cost</th>
+                        <th class="px-6 py-4 whitespace-nowrap text-right">Net Profit</th>
+                        <th class="px-6 py-4 whitespace-nowrap text-right">Margin</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for item in report_data %}
+                    <tr class="hover:bg-slate-50 transition group">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <p class="font-semibold text-slate-800 text-sm">{{ item.name }}</p>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-slate-700">
+                            {{ item.total_sold }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-slate-600">
+                            TZS {{ item.total_revenue }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-slate-500">
+                            TZS {{ item.total_cost }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-emerald-600">
+                            TZS {{ item.net_profit }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <span class="px-2 py-1 rounded-lg text-xs font-bold {% if item.margin >= 20 %}bg-green-100 text-green-700{% elif item.margin >= 10 %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-700{% endif %}">
+                                {{ item.margin }}%
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-10 text-center text-slate-500 text-sm">
+                            <div class="flex flex-col items-center justify-center">
+                                <i data-lucide="bar-chart-2" class="w-12 h-12 text-slate-300 mb-3"></i>
+                                <p>No sales data available.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         
-        <span style="color: var(--text-secondary); padding: 0 1rem;">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-        </span>
-        
-        {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" 
-               class="btn glass" style="text-decoration: none; color: white; padding: 0.5rem 1rem;">Next &rsaquo;</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" 
-               class="btn glass" style="text-decoration: none; color: white; padding: 0.5rem 1rem;">Last &raquo;</a>
+        {% if is_paginated %}
+        <div class="px-6 py-4 border-t border-slate-100 bg-slate-50">
+            {% include 'shop/pagination.html' %}
+        </div>
         {% endif %}
     </div>
 </div>
-{% endif %}
 {% endblock %}
