@@ -641,7 +641,7 @@ class ProfitReportView(ManagerRequiredMixin, LoginRequiredMixin, ListView):
         # Start with all products
         queryset = Product.objects.prefetch_related(
             Prefetch('sales', queryset=sales_filter, to_attr='filtered_sales'),
-            Prefetch('sale_items', queryset=items_filter, to_attr='filtered_invoice_items')
+            Prefetch('saleitem_set', queryset=items_filter, to_attr='filtered_invoice_items')
         )
         return queryset
 
