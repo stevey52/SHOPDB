@@ -3,12 +3,17 @@ from django.utils import timezone
 
 class Product(models.Model):
     name = models.CharField(max_length=255)
-    current_stock = models.IntegerField(default=0)
+    current_stock = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     cost_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     class Meta:
         ordering = ['name']
+
+    def save(self, *args, **kwargs):
+        if self.name:
+            self.name = self.name.upper()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -84,8 +89,8 @@ class InventoryMovement(models.Model):
     sale = models.ForeignKey('Sale', on_delete=models.CASCADE, null=True, blank=True, related_name='inventory_movements')
     invoice = models.ForeignKey('Invoice', on_delete=models.CASCADE, null=True, blank=True, related_name='inventory_movements')
     movement_type = models.CharField(max_length=3, choices=MOVEMENT_TYPES)
-    quantity = models.IntegerField()
-    remaining_quantity = models.IntegerField(default=0)  # Available quantity left in this batch
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    remaining_quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # Available quantity left in this batch
     date = models.DateTimeField(default=timezone.now)
     reference = models.CharField(max_length=255, null=True, blank=True)
     cost_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -120,7 +125,7 @@ class Client(models.Model):
 class Sale(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='sales')
     client = models.ForeignKey(Client, on_delete=models.SET_NULL, null=True, blank=True, related_name='sales')
-    quantity = models.IntegerField()
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
     price_at_sale = models.DecimalField(max_digits=10, decimal_places=2)
     cost_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     date = models.DateTimeField(default=timezone.now)
@@ -188,7 +193,7 @@ class Invoice(models.Model):
 class SaleItem(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
     price_at_sale = models.DecimalField(max_digits=10, decimal_places=2)
     cost_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 

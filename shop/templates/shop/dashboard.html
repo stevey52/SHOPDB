@@ -119,15 +119,19 @@
 
 {% block extra_js %}
 {% if is_manager %}
+{{ chart_labels|json_script:"chartLabels" }}
+{{ chart_sales|json_script:"chartSales" }}
+{{ chart_profit|json_script:"chartProfit" }}
+{{ chart_expenses|json_script:"chartExpenses" }}
 <script>
     const ctx = document.getElementById('performanceChart').getContext('2d');
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: {{ chart_labels|safe }},
+            labels: JSON.parse(document.getElementById('chartLabels').textContent),
             datasets: [{
                 label: 'Sales (TZS)',
-                data: {{ chart_sales|safe }},
+                data: JSON.parse(document.getElementById('chartSales').textContent),
                 borderColor: '#4f46e5',
                 backgroundColor: 'rgba(79, 70, 229, 0.1)',
                 borderWidth: 3,
@@ -137,7 +141,7 @@
                 pointBackgroundColor: '#4f46e5'
             }, {
                 label: 'Profit (TZS)',
-                data: {{ chart_profit|safe }},
+                data: JSON.parse(document.getElementById('chartProfit').textContent),
                 borderColor: '#10b981',
                 backgroundColor: 'rgba(16, 185, 129, 0.1)',
                 borderWidth: 3,
@@ -147,7 +151,7 @@
                 pointBackgroundColor: '#10b981'
             }, {
                 label: 'Expenses (TZS)',
-                data: {{ chart_expenses|safe }},
+                data: JSON.parse(document.getElementById('chartExpenses').textContent),
                 borderColor: '#f43f5e',
                 backgroundColor: 'rgba(244, 63, 94, 0.1)',
                 borderWidth: 3,

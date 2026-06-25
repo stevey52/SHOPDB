@@ -10,6 +10,7 @@ from django.contrib import messages
 from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
+from decimal import Decimal
 from .models import Product, InventoryMovement, Sale, MoneyJournal, ExpenseCategory, Client, DebtPayment, Invoice, SaleItem
 from .forms import SaleForm, MovementForm, MoneyJournalForm, ClientForm, DebtPaymentForm
 from .mixins import ManagerRequiredMixin, DateFilterMixin
@@ -481,8 +482,8 @@ class BulkRestockView(ManagerRequiredMixin, LoginRequiredMixin, TemplateView):
             qty_added = request.POST.get(f'qty_{pid}')
             cost_price = request.POST.get(f'cost_price_{pid}')
             
-            if qty_added and int(qty_added) > 0:
-                qty = int(qty_added)
+            if qty_added and Decimal(qty_added) > 0:
+                qty = Decimal(qty_added)
                 product = Product.objects.get(pk=pid)
                 
                 # Convert cost price to decimal if provided
@@ -901,7 +902,7 @@ class InvoiceCreateView(LoginRequiredMixin, TemplateView):
             data = json.loads(request.body)
             client_id = data.get('client_id')
             is_credit = data.get('is_credit', False)
-            amount_paid = float(data.get('amount_paid', 0))
+            amount_paid = Decimal(data.get('amount_paid', 0))
             items_data = data.get('items', [])
 
             if not items_data:
@@ -921,8 +922,8 @@ class InvoiceCreateView(LoginRequiredMixin, TemplateView):
             # Process items
             for item in items_data:
                 product = Product.objects.get(id=item['product_id'])
-                quantity = int(item['quantity'])
-                price = float(item['price'])
+                quantity = Decimal(item['quantity'])
+                price = Decimal(item['price'])
 
                 if quantity <= 0:
                     continue
