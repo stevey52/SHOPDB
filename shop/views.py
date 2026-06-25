@@ -910,9 +910,19 @@ class InvoiceCreateView(LoginRequiredMixin, TemplateView):
 
             client = Client.objects.get(id=client_id) if client_id else None
 
+            date_str = data.get('date')
+            invoice_date = timezone.now()
+            if date_str:
+                try:
+                    dt = timezone.datetime.strptime(date_str, '%Y-%m-%d')
+                    invoice_date = timezone.make_aware(dt)
+                except ValueError:
+                    pass
+
             # Create Invoice
             invoice = Invoice.objects.create(
                 client=client,
+                date=invoice_date,
                 is_credit=is_credit,
                 amount_paid=amount_paid
             )
@@ -954,6 +964,7 @@ class InvoiceCreateView(LoginRequiredMixin, TemplateView):
                     invoice=invoice,
                     movement_type='OUT',
                     quantity=quantity,
+                    date=invoice.date,
                     reference=f'Invoice #{invoice.id}',
                     cost_price=cost_price
                 )
