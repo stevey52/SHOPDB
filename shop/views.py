@@ -1043,3 +1043,132 @@ class InvoiceReceiptPDFView(LoginRequiredMixin, View):
         if pisa_status.err:
             return HttpResponse('We had some errors <pre>' + html + '</pre>')
         return response
+
+class InvoiceUpdateView(LoginRequiredMixin, TemplateView):
+    template_name = 'shop/invoice_update.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        invoice = get_object_or_404(Invoice, pk=self.kwargs['pk'])
+        context['invoice'] = invoice
+        context['clients'] = Client.objects.all()
+        context['products'] = Product.objects.all().order_by('name')
+        return context
+
+    @transaction.atomic
+    def post(self, request, *args, **kwargs):
+        try:
+            invoice = get_object_or_404(Invoice, pk=self.kwargs['pk'])
+            data = json.loads(request.body)
+            client_id = data.get('client_id')
+            is_credit = data.get('is_credit', False)
+            amount_paid = Decimal(data.get('amount_paid', 0))
+            items_data = data.get('items', [])
+            date_str = data.get('date')
+
+            if not items_data:
+                return JsonResponse({'success': False, 'error': 'No items in the invoice.'})
+
+            # 1. Revert Old Items (Restore Stock)
+            for item in invoice.items.all():
+                product = item.product
+                product.current_stock += item.quantity
+                product.save()
+                
+                # Create compensation stock-in to restore batches
+                InventoryMovement.objects.create(
+                    product=product,
+                    movement_type='IN',
+                    quantity=item.quantity,
+                    remaining_quantity=item.quantity,
+                    reference=f'Invoice #{invoice.id} edited (revert)',
+                    cost_price=item.cost_price,
+                    date=invoice.date
+                )
+
+            # 2. Delete old related records
+            invoice.items.all().delete()
+            # MoneyJournal entries related to this invoice are cascading, but let's be explicit
+            MoneyJournal.objects.filter(invoice=invoice).delete()
+            # Delete old OUT movements to avoid clutter? Or keep them?
+            # It's better to keep the OUT movement and the IN movement for audit trail.
+            # But the logic above already creates an IN movement to compensate.
+            # The old IN movements for deletion have `date=invoice.date`.
+
+            # 3. Update Invoice Details
+            client = Client.objects.get(id=client_id) if client_id else None
+            invoice.client = client
+            invoice.is_credit = is_credit
+            invoice.amount_paid = amount_paid
+            
+            if date_str:
+                try:
+                    dt = timezone.datetime.strptime(date_str, '%Y-%m-%d')
+                    invoice.date = timezone.make_aware(dt)
+                except ValueError:
+                    pass
+            invoice.save()
+
+            total_sale_price = 0
+
+            # 4. Apply New Items
+            for item in items_data:
+                product = Product.objects.get(id=item['product_id'])
+                quantity = Decimal(item['quantity'])
+                price = Decimal(item['price'])
+
+                if quantity <= 0:
+                    continue
+
+                if product.current_stock < quantity:
+                    raise ValueError(f"Not enough stock for {product.name}")
+
+                # Calculate FIFO cost price
+                cost_price = product.get_fifo_cost_price(quantity)
+                product.deduct_from_batches(quantity)
+
+                # Update current stock
+                product.current_stock -= quantity
+                product.save()
+
+                # Create SaleItem
+                SaleItem.objects.create(
+                    invoice=invoice,
+                    product=product,
+                    quantity=quantity,
+                    price_at_sale=price,
+                    cost_price=cost_price
+                )
+
+                # Create InventoryMovement OUT
+                InventoryMovement.objects.create(
+                    product=product,
+                    invoice=invoice,
+                    movement_type='OUT',
+                    quantity=quantity,
+                    date=invoice.date,
+                    reference=f'Invoice #{invoice.id} (edited)',
+                    cost_price=cost_price
+                )
+
+                total_sale_price += (quantity * price)
+
+            # 5. Create MoneyJournal entry
+            amount_received = amount_paid if is_credit else total_sale_price
+            if amount_received > 0:
+                description = f"Invoice #{invoice.id}"
+                if client:
+                    description += f" - {client.name}"
+
+                MoneyJournal.objects.create(
+                    entry_type='Income',
+                    amount=amount_received,
+                    description=description,
+                    invoice=invoice,
+                    date=invoice.date
+                )
+
+            return JsonResponse({'success': True, 'invoice_id': invoice.id})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})

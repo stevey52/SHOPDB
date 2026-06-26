@@ -33,6 +33,7 @@ urlpatterns = [
     path('products/<int:pk>/quick-stock/', views.quick_stock_update, name='quick_stock_update'),
     path('invoices/', views.InvoiceListView.as_view(), name='invoice_list'),
     path('invoices/new/', views.InvoiceCreateView.as_view(), name='invoice_create'),
+    path('invoices/<int:pk>/edit/', views.InvoiceUpdateView.as_view(), name='invoice_update'),
     path('invoices/<int:pk>/delete/', views.InvoiceDeleteView.as_view(), name='invoice_delete'),
     path('invoices/<int:pk>/receipt/', views.InvoiceReceiptPDFView.as_view(), name='invoice_receipt_pdf'),
 ]
