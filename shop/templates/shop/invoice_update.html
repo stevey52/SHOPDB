@@ -172,7 +172,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Build product options
         let options = '<option value="">-- Select Product --</option>';
-        for (const [id, prod] of Object.entries(productsData)) {
+        const sortedProducts = Object.entries(productsData).sort((a, b) => {
+            return a[1].name.localeCompare(b[1].name);
+        });
+        
+        for (const [id, prod] of sortedProducts) {
             const stockWarning = prod.stock <= 0 ? ' (Out of stock)' : ` (${prod.stock} in stock)`;
             const selected = (item && item.product_id == id) ? 'selected' : '';
             options += `<option value="${id}" ${selected}>${prod.name}${stockWarning}</option>`;
