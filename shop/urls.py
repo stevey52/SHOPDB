@@ -36,4 +36,5 @@ urlpatterns = [
     path('invoices/<int:pk>/edit/', views.InvoiceUpdateView.as_view(), name='invoice_update'),
     path('invoices/<int:pk>/delete/', views.InvoiceDeleteView.as_view(), name='invoice_delete'),
     path('invoices/<int:pk>/receipt/', views.InvoiceReceiptPDFView.as_view(), name='invoice_receipt_pdf'),
+    path('api/product-by-barcode/<str:barcode>/', views.product_by_barcode, name='product_by_barcode'),
 ]

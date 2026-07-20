@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+﻿from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import views as auth_views
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, FormView, View
 from django.urls import reverse_lazy
@@ -116,7 +116,7 @@ class ProductCreateView(LoginRequiredMixin, CreateView):
     template_name = 'shop/product_form.html'
     success_url = reverse_lazy('product_list')
 
-class ProductUpdateView(ManagerRequiredMixin, LoginRequiredMixin, UpdateView):
+class ProductUpdateView(LoginRequiredMixin, UpdateView):
     model = Product
     fields = ['name', 'current_stock', 'unit_price', 'cost_price']
     template_name = 'shop/product_form.html'
@@ -555,7 +555,7 @@ class MovementCreateView(LoginRequiredMixin, CreateView):
         movement.save()
         return super().form_valid(form)
 
-class MovementUpdateView(ManagerRequiredMixin, LoginRequiredMixin, UpdateView):
+class MovementUpdateView(LoginRequiredMixin, UpdateView):
     model = InventoryMovement
     form_class = MovementForm
     template_name = 'shop/movement_form.html'
@@ -1044,7 +1044,7 @@ class InvoiceReceiptPDFView(LoginRequiredMixin, View):
             return HttpResponse('We had some errors <pre>' + html + '</pre>')
         return response
 
-class InvoiceUpdateView(ManagerRequiredMixin, LoginRequiredMixin, TemplateView):
+class InvoiceUpdateView(LoginRequiredMixin, TemplateView):
     template_name = 'shop/invoice_update.html'
 
     def get_context_data(self, **kwargs):
@@ -1172,17 +1172,3 @@ class InvoiceUpdateView(ManagerRequiredMixin, LoginRequiredMixin, TemplateView):
 
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})
-
-@login_required
-def product_by_barcode(request, barcode):
-    try:
-        product = Product.objects.get(barcode=barcode)
-        return JsonResponse({
-            'success': True,
-            'id': product.id,
-            'name': product.name,
-            'unit_price': float(product.unit_price),
-            'current_stock': float(product.current_stock)
-        })
-    except Product.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Product not found'})

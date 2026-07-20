@@ -4,6 +4,8 @@ from django.utils import timezone
 class Product(models.Model):
     name = models.CharField(max_length=255)
     current_stock = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    minimum_stock_threshold = models.DecimalField(max_digits=10, decimal_places=2, default=5)
+    barcode = models.CharField(max_length=255, null=True, blank=True, unique=True)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
     cost_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
@@ -158,12 +160,21 @@ class Sale(models.Model):
             return self.total_price - self.amount_paid
         return 0
 
+    @property
+    def payment_status(self):
+        if not self.is_credit or self.balance_due <= 0:
+            return "PAID"
+        if self.amount_paid > 0:
+            return "PARTIAL"
+        return "UNPAID"
+
     def __str__(self):
         return f"Sale: {self.product.name} x {self.quantity}"
 
 class Invoice(models.Model):
     client = models.ForeignKey(Client, on_delete=models.SET_NULL, null=True, blank=True, related_name='invoices')
     date = models.DateTimeField(default=timezone.now)
+    due_date = models.DateField(null=True, blank=True)
     is_credit = models.BooleanField(default=False)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     notes = models.TextField(null=True, blank=True)
@@ -185,6 +196,14 @@ class Invoice(models.Model):
         if self.is_credit:
             return self.total_price - self.amount_paid
         return 0
+
+    @property
+    def payment_status(self):
+        if not self.is_credit or self.balance_due <= 0:
+            return "PAID"
+        if self.amount_paid > 0:
+            return "PARTIAL"
+        return "UNPAID"
 
     def __str__(self):
         client_name = self.client.name if self.client else "Walk-in"

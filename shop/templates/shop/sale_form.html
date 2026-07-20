@@ -154,6 +154,53 @@
 
         creditCheckbox.addEventListener('change', toggleCreditFields);
         toggleCreditFields(); // Initial state
+        
+        // Barcode Scanner Listener
+        let barcodeBuffer = "";
+        let lastKeyTime = Date.now();
+        
+        window.addEventListener('keypress', function(e) {
+            // Ignore if typing inside an input field
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                return;
+            }
+            const currentTime = Date.now();
+            
+            // If more than 50ms passed since last keystroke, assume it's human typing and reset buffer
+            if (currentTime - lastKeyTime > 50) {
+                barcodeBuffer = "";
+            }
+            
+            lastKeyTime = currentTime;
+            
+            if (e.key === 'Enter' && barcodeBuffer.length > 0) {
+                e.preventDefault(); // Prevent form submission
+                
+                // Fetch product by barcode
+                fetch(`/api/product-by-barcode/${barcodeBuffer}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            const productSelect = document.querySelector('select[name="product"]');
+                            const priceInput = document.querySelector('input[name="price_at_sale"]');
+                            
+                            productSelect.value = data.id;
+                            if (priceInput) priceInput.value = data.unit_price;
+                            
+                            // Optional: Give visual feedback
+                            productSelect.classList.add('ring-2', 'ring-green-500');
+                            setTimeout(() => productSelect.classList.remove('ring-2', 'ring-green-500'), 1000);
+                        } else {
+                            alert('Barcode not found: ' + barcodeBuffer);
+                        }
+                    })
+                    .catch(err => console.error(err));
+                    
+                barcodeBuffer = "";
+            } else if (e.key !== 'Enter') {
+                barcodeBuffer += e.key;
+            }
+        });
     });
 </script>
 {% endblock %}

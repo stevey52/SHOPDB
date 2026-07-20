@@ -126,7 +126,7 @@
 <script>
     const ctx = document.getElementById('performanceChart').getContext('2d');
     new Chart(ctx, {
-        type: 'line',
+        type: 'bar',
         data: {
             labels: JSON.parse(document.getElementById('chartLabels').textContent),
             datasets: [{

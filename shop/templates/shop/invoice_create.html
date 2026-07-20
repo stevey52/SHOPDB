@@ -294,6 +294,77 @@ document.addEventListener('DOMContentLoaded', function() {
     createRow();
     addItemBtn.addEventListener('click', createRow);
 
+    // Barcode Scanner Listener
+    let barcodeBuffer = "";
+    let lastKeyTime = Date.now();
+    
+    window.addEventListener('keypress', function(e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            return;
+        }
+        const currentTime = Date.now();
+        if (currentTime - lastKeyTime > 50) {
+            barcodeBuffer = "";
+        }
+        lastKeyTime = currentTime;
+        
+        if (e.key === 'Enter' && barcodeBuffer.length > 0) {
+            e.preventDefault();
+            
+            fetch(`/api/product-by-barcode/${barcodeBuffer}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Check if product is already in the list
+                        let found = false;
+                        document.querySelectorAll('#items-table tbody tr').forEach(tr => {
+                            const prodSelect = tr.querySelector('.product-select');
+                            if (prodSelect.value == data.id) {
+                                const qtyInput = tr.querySelector('.quantity-input');
+                                qtyInput.value = parseFloat(qtyInput.value) + 1;
+                                // Trigger change/input events to update totals
+                                qtyInput.dispatchEvent(new Event('input'));
+                                found = true;
+                                tr.classList.add('bg-green-50');
+                                setTimeout(() => tr.classList.remove('bg-green-50'), 1000);
+                            }
+                        });
+                        
+                        if (!found) {
+                            // Find an empty row or create one
+                            let emptyRow = null;
+                            document.querySelectorAll('#items-table tbody tr').forEach(tr => {
+                                const prodSelect = tr.querySelector('.product-select');
+                                if (!prodSelect.value && !emptyRow) {
+                                    emptyRow = tr;
+                                }
+                            });
+                            
+                            if (!emptyRow) {
+                                createRow();
+                                const rows = document.querySelectorAll('#items-table tbody tr');
+                                emptyRow = rows[rows.length - 1];
+                            }
+                            
+                            const prodSelect = emptyRow.querySelector('.product-select');
+                            prodSelect.value = data.id;
+                            prodSelect.dispatchEvent(new Event('change'));
+                            
+                            emptyRow.classList.add('bg-green-50');
+                            setTimeout(() => emptyRow.classList.remove('bg-green-50'), 1000);
+                        }
+                    } else {
+                        showAlert('Barcode not found: ' + barcodeBuffer, 'amber');
+                    }
+                })
+                .catch(err => console.error(err));
+                
+            barcodeBuffer = "";
+        } else if (e.key !== 'Enter') {
+            barcodeBuffer += e.key;
+        }
+    });
+
     // Submit via AJAX
     submitBtn.addEventListener('click', function() {
         const clientId = document.getElementById('client').value;
